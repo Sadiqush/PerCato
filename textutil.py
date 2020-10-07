@@ -6,6 +6,7 @@ import pandas as pd
 from itertools import product
 from typing import List, Tuple, Iterable, Set
 from PIL import Image, ImageDraw, ImageFont, ImageColor
+
 JOINER = chr(8205)
 JOINABLES = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
 NON_JOINABLES = " ؟ .،×٪٬!"
@@ -13,7 +14,8 @@ NON_JOINABLES = " ؟ .،×٪٬!"
 
 class ImageMeta:
     id = 0
-    def __init__(self,text, image, parts, boxes):
+
+    def __init__(self, text, image, parts, boxes):
         self.text = text
         self.image = image
         self.parts = parts
@@ -35,13 +37,14 @@ class ImageMeta:
             image[x0:x1 + 1, y1] = value
             image[x0, y0:y1 + 1] = value
             image[x1, y0:y1 + 1] = value
-        Image.fromarray(image.transpose((1,0,2))).save(path)
+        Image.fromarray(image.transpose((1, 0, 2))).save(path)
 
     def to_dict(self, path):
         w, h = self.image.shape
-        dic = {"id":self.id, "text":self.text, "image_name":path, "parts":self.parts, "width":w, "height":h,
-               "boxes":self.boxes, "n": self.length}
+        dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts, "width": w, "height": h,
+               "boxes": self.boxes, "n": self.length}
         return dic
+
 
 class TextGen:
     def __init__(self, font_path, font_size, exceptions: Iterable[str] = None):
@@ -58,7 +61,7 @@ class TextGen:
 
     def create_meta_image(self, text):
         image = self.create_image(text)
-        boxes = self.get_rectangles(image,text)
+        boxes = self.get_rectangles(image, text)
         parts = self.get_characters(text)
         meta = ImageMeta(text, image, parts, boxes)
         return meta
@@ -271,7 +274,7 @@ def binary_rle_decode(rle, delimiter=' '):
     return arr
 
 
-def get_words_of_length(length:int, repetition=False, letters:str = 'ضصثقفغعهخحجچشییبلاتنمکگظطزرذدپوژ') -> Set:
+def get_words_of_length(length: int, repetition=False, letters: str = 'ضصثقفغعهخحجچشییبلاتنمکگظطزرذدپوژ') -> Set:
     tuples = product(letters, repeat=length)
     if repetition:
         return {''.join(tup) for tup in tuples if len(set(tup)) == length}
@@ -283,7 +286,7 @@ def main():
     gen = TextGen(r"b_nazanin.ttf", 64, ['لا', 'لله', 'ریال'])
     text = "صادق"
     pathlib.Path("/images").mkdir(parents=True, exist_ok=True)
-    words = pd.read_excel(r"words.xlsx").to_numpy()[:, 0]
+    words = pd.read_csv("words.csv").to_numpy().flatten()
     non = u'\u200c'
     loqats = 'ضصثقفغعهخحجچشییبلاتنمکگظطزرذدپوژ'
     words = [word for word in words if all(c in loqats for c in word)]
@@ -310,10 +313,6 @@ def main():
                     file.flush()
                 js = ",\n{}".format(js)
             file.write(js)
-
-
-def nigga():
-    print("nigga")
 
 
 if __name__ == '__main__':
