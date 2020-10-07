@@ -312,5 +312,9 @@ def main():
             file.write(js)
 
 
+def nigga():
+    print("nigga")
+
+
 if __name__ == '__main__':
     main()
