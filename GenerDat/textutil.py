@@ -1,5 +1,4 @@
 import json
-import os
 import pathlib
 import numpy as np
 import pandas as pd
@@ -7,22 +6,31 @@ from itertools import product
 from typing import List, Tuple, Iterable, Set
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 
-JOINER = chr(8205)
-JOINABLES = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
-NON_JOINABLES = " ؟ .،×٪٬!"
+JOINER = u'\u200d'
+NON_JOINER = u'\u200c'
+JOINABLE_LETTERS = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
+NON_JOINABLE_LETTERS = "رزدذواآأ"
+ALPHABET = JOINABLE_LETTERS + NON_JOINABLE_LETTERS
+SYMBOLS = "|{}[]؛:«»؟<>ء\/.=-+()*،×٪٫٬!"
+NUMBERS = "۰۱۲۳۴۵۶۷۸۹"
+VOWEL_SYMBOLS = [chr(i) for i in (1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618, 1619, 1620, 1648)]
 
 
 class ImageMeta:
     id = 0
 
-    def __init__(self, text, image, parts, boxes):
+    def __init__(self, text, image, parts, visible_parts, boxes, id=-1):
         self.text = text
         self.image = image
         self.parts = parts
+        self.visible_parts = visible_parts
         self.boxes = boxes
-        self.id = ImageMeta.id
-        ImageMeta.id += 1
         self.length = len(parts)
+        if id > 0:
+            self.id = id
+        else:
+            self.id = ImageMeta.id
+            ImageMeta.id += 1
 
     def save_image(self, path, transpose=False):
         image = Image.fromarray(self.image.transpose() if transpose else self.image)
@@ -41,9 +49,9 @@ class ImageMeta:
 
     def to_dict(self, path):
         w, h = self.image.shape
-        dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts, "width": w, "height": h,
-               "boxes": self.boxes, "n": self.length}
-        return dic
+        d = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts, "classes": self.visible_parts,
+             "width": w, "height": h, "boxes": self.boxes, "n": self.length}
+        return d
 
 
 class TextGen:
@@ -63,7 +71,8 @@ class TextGen:
         image = self.create_image(text)
         boxes = self.get_rectangles(image, text)
         parts = self.get_characters(text)
-        meta = ImageMeta(text, image, parts, boxes)
+        visible_parts = self.get_visible_parts(text)
+        meta = ImageMeta(text, image, parts, visible_parts, boxes)
         return meta
 
     def get_rectangles(self, image: np.ndarray, text):
@@ -223,6 +232,20 @@ class TextGen:
                     return item
         return ''
 
+    def get_visible_parts(self, text):
+        chars = self.get_characters(text)
+        chars.reverse()
+        visible_parts = []
+        i, n = 0, len(chars)
+        while i < n - 1:
+            c = chars[i]
+            if self.is_joined(c, chars[i + 1]):
+                c += JOINER
+            visible_parts.append(c)
+            i += 1
+        visible_parts.append(chars[i])
+        return visible_parts
+
     @staticmethod
     def is_joined(str0, str1):
         if str0:
@@ -233,10 +256,17 @@ class TextGen:
             c1 = str1[0]
         else:
             return False
-        if c0 in JOINABLES and c1 not in NON_JOINABLES:
+        if c0 in JOINABLE_LETTERS and c1 not in SYMBOLS + NUMBERS:
             return True
         else:
             return False
+
+    @staticmethod
+    def get_glyph(string, index):
+        c = string[index]
+        if TextGen.is_joined(string[:index + 1], string[index + 1:]):
+            c += JOINER
+        return c
 
 
 def get_mask(image: np.ndarray, x0, y0, x1, y1):
@@ -246,35 +276,7 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
     return mask.astype('b')
 
 
-def binary_rle(arr):
-    rle = []
-    last = 0
-    l = 0
-    for num in arr:
-        if num == last:
-            l += 1
-        else:
-            rle.append(l)
-            last = num
-            l = 1
-    rle.append(l)
-    if last == 0:
-        rle.append(0)
-    return rle
-
-
-def binary_rle_decode(rle, delimiter=' '):
-    rle_arr = np.fromstring(rle, 'i', sep=delimiter)
-    arr = []
-    zeros = rle_arr[::2]
-    ones = rle_arr[1::2]
-    for i in range(0, len(zeros)):
-        arr.extend([0] * zeros[i])
-        arr.extend([0] * ones[i])
-    return arr
-
-
-def get_words_of_length(length: int, repetition=False, letters: str = 'ضصثقفغعهخحجچشییبلاتنمکگظطزرذدپوژ') -> Set:
+def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) -> Set:
     tuples = product(letters, repeat=length)
     if repetition:
         return {''.join(tup) for tup in tuples if len(set(tup)) == length}
@@ -284,17 +286,14 @@ def get_words_of_length(length: int, repetition=False, letters: str = 'ضصثق�
 
 def main():
     gen = TextGen(r"b_nazanin.ttf", 64, ['لا', 'لله', 'ریال'])
-    text = "صادق"
     pathlib.Path("/images").mkdir(parents=True, exist_ok=True)
     words = pd.read_csv("words.csv").to_numpy().flatten()
-    non = u'\u200c'
-    loqats = 'ضصثقفغعهخحجچشییبلاتنمکگظطزرذدپوژ'
-    words = [word for word in words if all(c in loqats for c in word)]
+    words = [word for word in words if all(c in ALPHABET for c in word)]
     words = np.random.choice(words, 30).tolist()
+    words = ['لالایی'] + words
     print("start...")
-    image_dicks = []
     n = len(words)
-    flush_period = 1
+    flush_period = 100
     with open("final.json", 'w') as file:
         for i in range(n):
             word = words[i]
@@ -302,7 +301,6 @@ def main():
             meta.save_image(f"images/image{meta.id}.png")
             meta.save_image_with_boxes(f"images/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
-            image_dicks.append(meta.to_dict(f"image{meta.id}.png"))
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
                 js = "[{}".format(js)
