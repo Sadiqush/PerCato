@@ -38,7 +38,7 @@ class ImageMeta:
         image = Image.fromarray(self.image.transpose() if transpose else self.image)
         image.save(path)
 
-    def save_image_with_boxes(self, path, color="yellow", transpose=False):
+    def save_image_with_boxes(self, path, color="yellow", transpose=True):
         image = self.image.transpose()
         image = np.concatenate([image[..., np.newaxis]] * 3, axis=2)
         value = list(ImageColor.getrgb(color))
@@ -287,7 +287,7 @@ def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) 
 
 
 def main():
-    gen = TextGen(r"b_nazanin.ttf", 64, ['لا', 'لله', 'ریال'])
+    gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
     words = pd.read_csv(os.path.join(ocr_path, "words.csv")).to_numpy().flatten()
     words = [word for word in words if all(c in ALPHABET for c in word)]
@@ -320,5 +320,6 @@ if __name__ == '__main__':
     image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data3/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
+    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 30
     main()
