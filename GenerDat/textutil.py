@@ -1,11 +1,11 @@
 import json
 import pathlib
 import os
+from itertools import product
+from typing import List, Tuple, Iterable, Set
 
 import numpy as np
 import pandas as pd
-from itertools import product
-from typing import List, Tuple, Iterable, Set
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 JOINER = u'\u200d'
@@ -21,7 +21,7 @@ VOWEL_SYMBOLS = [chr(i) for i in (1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618
 class ImageMeta:
     id = 0
 
-    def __init__(self, text, image, parts, visible_parts, boxes, id=-1):
+    def __init__(self, text, image: np.array, parts, visible_parts, boxes, id=-1):
         self.text = text
         self.image = image
         self.parts = parts
@@ -50,7 +50,7 @@ class ImageMeta:
         Image.fromarray(image.transpose((1, 0, 2))).save(path)
 
     def to_dict(self, path):
-        w, h = self.image.shape
+        h, w = self.image.shape
         d = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts, "classes": self.visible_parts,
              "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return d
@@ -297,6 +297,7 @@ def main():
     n = len(words)
     flush_period = 100
     with open(json_path, 'w') as file:
+        print(f"generating in: {image_path}")
         for i in range(n):
             word = words[i]
             meta = gen.create_meta_image(word)
@@ -317,7 +318,7 @@ def main():
 
 if __name__ == '__main__':
     image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data3/images')
-    json_path = os.path.join(image_path, "final.json")
+    json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     batch = 30
-    #main()
+    main()
