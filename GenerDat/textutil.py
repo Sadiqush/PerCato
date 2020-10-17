@@ -1,5 +1,7 @@
 import json
 import pathlib
+import os
+
 import numpy as np
 import pandas as pd
 from itertools import product
@@ -286,20 +288,20 @@ def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) 
 
 def main():
     gen = TextGen(r"b_nazanin.ttf", 64, ['لا', 'لله', 'ریال'])
-    pathlib.Path("/images").mkdir(parents=True, exist_ok=True)
-    words = pd.read_csv("words.csv").to_numpy().flatten()
+    pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
+    words = pd.read_csv(os.path.join(ocr_path, "words.csv")).to_numpy().flatten()
     words = [word for word in words if all(c in ALPHABET for c in word)]
-    words = np.random.choice(words, 30).tolist()
+    words = np.random.choice(words, batch).tolist()
     words = ['لالایی'] + words
     print("start...")
     n = len(words)
     flush_period = 100
-    with open("final.json", 'w') as file:
+    with open(json_path, 'w') as file:
         for i in range(n):
             word = words[i]
             meta = gen.create_meta_image(word)
-            meta.save_image(f"images/image{meta.id}.png")
-            meta.save_image_with_boxes(f"images/image_box{meta.id}.jpg")
+            meta.save_image(f"{image_path}/image{meta.id}.png")
+            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
@@ -314,4 +316,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data3/images')
+    json_path = os.path.join(image_path, "final.json")
+    ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
+    batch = 30
+    #main()
