@@ -136,57 +136,60 @@ class TextGen:
         # ux0, ux1 = x0, x1
         rectangles = []
         n = len(widths)
+        good_pixels = set()
+        bad_pixels = set()
+        x0, x1 = 0, 0
+        y0, y1 = 0, 0
+
+        def check_pixel(image, x0, x1, y0, y1, i, j):
+            good = False
+            img_pixels = self.get_connected_pixels(image, i, j)
+            # img_pixels = image
+            seg_pixels = [pixel for pixel in img_pixels if x0 <= pixel[0] <= x1 and y0 <= pixel[1] <= y1]
+            ns, ni = len(seg_pixels), len(img_pixels)
+            xs = []
+            ys = []
+            for pixel in seg_pixels:
+                xs.append(pixel[0])
+                ys.append(pixel[1])
+            shape = (max(xs) + 1 - min(xs), max(ys) + 1 - min(ys))
+            if ns + 2 >= ni:
+                good = True
+            elif shape[0] < 2 or shape[1] < 2:
+                good = False
+            elif ns / (ns + ni) > 0.1 or ns > 15:
+                good = True
+            return good, seg_pixels
+
+        def complex_condition(x=-1, y=-1):
+            pixels = set()
+            if x >= 0:
+                if y >= 0:
+                    raise Exception("Only one of the this shids must be passed.")
+                iterable = [(x, j) for j in range(y0, y1 + 1)]
+            elif y >= 0:
+                iterable = [(i, y) for i in range(x0, x1 + 1)]
+            else:
+                raise Exception("No parameters.")
+            for i, j in iterable:
+                if image[i, j] > 0 and (i, j) not in pixels:
+                    if (i, j) in bad_pixels:
+                        continue
+                    if (i, j) in good_pixels:
+                        return False
+                    # print("herex:",x,j)
+                    good, p = check_pixel(image, x0, x1, y0, y1, i, j)
+
+                    if good:
+                        good_pixels.update(p)
+                        return False
+                    pixels.update(p)
+                    bad_pixels.update(p)
+            return True
+
         for i in range(n - 1):
             x0, x1 = widths[i], widths[i + 1]
             y0, y1 = 0, height - 1
-            good_pixels = set()
-            bad_pixels = set()
-
-            def check_pixel(image, x0, x1, y0, y1, i, j):
-                good = False
-                img_pixels = self.get_connected_pixels(image, i, j)
-                seg_pixels = [pixel for pixel in img_pixels if x0 <= pixel[0] <= x1 and y0 <= pixel[1] <= y1]
-                ns, ni = len(seg_pixels), len(img_pixels)
-                xs = []
-                ys = []
-                for pixel in seg_pixels:
-                    xs.append(pixel[0])
-                    ys.append(pixel[1])
-                shape = (max(xs) + 1 - min(xs), max(ys) + 1 - min(ys))
-                if ns + 2 >= ni:
-                    good = True
-                elif shape[0] < 2 or shape[1] < 2:
-                    good = False
-                elif ns / (ns + ni) > 0.1 or ns > 15:
-                    good = True
-                return good, seg_pixels
-
-            def complex_condition(x=-1, y=-1):
-                pixels = set()
-                if x >= 0:
-                    if y >= 0:
-                        raise Exception("Only one of the this shids must be passed.")
-                    iterable = [(x, j) for j in range(y0, y1 + 1)]
-                elif y >= 0:
-                    iterable = [(i, y) for i in range(x0, x1 + 1)]
-                else:
-                    raise Exception("No parameters.")
-                for i, j in iterable:
-                    if image[i, j] > 0 and (i, j) not in pixels:
-                        if (i, j) in bad_pixels:
-                            continue
-                        if (i, j) in good_pixels:
-                            return False
-                        # print("herex:",x,j)
-                        good, p = check_pixel(image, x0, x1, y0, y1, i, j)
-
-                        if good:
-                            good_pixels.update(p)
-                            return False
-                        pixels.update(p)
-                        bad_pixels.update(p)
-                return True
-
             # x1i += 1
             # if x1i == 3:
             #     print("here")
@@ -237,6 +240,7 @@ class TextGen:
         return self._dummy.textsize(text, spacing=0, font=self.font, language='fa_IR', direction="rtl")
 
     def get_characters(self, text):
+        """Gets characters of a text as a list with respect to exceptions."""
         n = len(text)
         chars = []
         while n > 0:
@@ -247,6 +251,7 @@ class TextGen:
         return chars
 
     def get_character_widths(self, text) -> List[int]:
+        """Returns a list containing widths (and only width) of characters in a text."""
         if len(text) - text.count(JOINER) < 2:
             w, _ = self.get_size(text)
             return [w - 1]
@@ -261,6 +266,7 @@ class TextGen:
         return widths
 
     def reduce(self, text):
+        """why tf I exist?"""
         n = len(text)
         items = []
         while n > 0:
@@ -277,12 +283,12 @@ class TextGen:
             n -= count
         return items
 
-    def _search_exception_backward(self, end, text):
-        """wtf"""
+    def _search_exception_backward(self, leng, text):
+        """Finds exceptions (e.g. لا) in a text and returns it as a string."""
         if self.exceptions:
             for item in self.exceptions:
                 n = len(item)
-                if n <= end and item == text[end - n:end]:
+                if n <= leng and item == text[leng - n:leng]:    # [leng - n:leng]?
                     return item
         return None
 
