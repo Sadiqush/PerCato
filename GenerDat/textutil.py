@@ -19,6 +19,17 @@ VOWEL_SYMBOLS = [chr(i) for i in (1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618
 
 
 class ImageMeta:
+    """
+    This class is used to export images along with generated metadata, aka making the json file.
+
+    Args:
+        text (str): input text for json.
+        image (np.array): the output image.
+        parts (): text chars for json.
+        visible_parts (): main class of chars for json.
+        boxes ():
+        id (int): wtf
+    """
     id = 0
 
     def __init__(self, text, image: np.array, parts, visible_parts, boxes, id=-1):
@@ -35,10 +46,25 @@ class ImageMeta:
             ImageMeta.id += 1
 
     def save_image(self, path, transpose=False):
+        """
+        Save image to the path.
+
+        Args:
+            path (str): absolute path for the image.
+            transpose (bool): transpose image array before saving (default: False).
+        """
         image = Image.fromarray(self.image.transpose() if transpose else self.image)
         image.save(path)
 
     def save_image_with_boxes(self, path, color="yellow", transpose=True):
+        """
+        Draw bbox on image and save to the path.
+
+        Args:
+            path (str): absolute path for the image.
+            color (str): the color of bbox.
+            transpose (bool): transpose image array before saving (default: True).
+        """
         image = self.image.transpose()
         image = np.concatenate([image[..., np.newaxis]] * 3, axis=2)
         value = list(ImageColor.getrgb(color))
@@ -50,26 +76,39 @@ class ImageMeta:
         Image.fromarray(image.transpose((1, 0, 2))).save(path)
 
     def to_dict(self, path):
+        """
+        Generate a json block for the image. It's not in COCO format.
+
+        Args:
+            path (str): non-absolute path (name) of the image.
+
+        Returns:
+            json_dic (dic): json block of the image.
+        """
         h, w = self.image.shape
-        d = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts, "classes": self.visible_parts,
-             "width": w, "height": h, "boxes": self.boxes, "n": self.length}
-        return d
+        # TODO: COCO standard format
+        json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
+                    "classes": self.visible_parts, "width": w, "height": h, "boxes": self.boxes, "n": self.length}
+        return json_dic
 
 
 class TextGen:
+    """
+    This class generates images and their metadata using given text and font.
+
+    Args:
+        font_path (str): absolute path for the .ttf font file.
+        font_size (int): font size for the text.
+        exceptions: wtf.
+    """
+
     def __init__(self, font_path, font_size, exceptions: Iterable[str] = None):
         self.font = ImageFont.truetype(font_path, size=font_size, encoding='utf-8')
         self._dummy = ImageDraw.Draw(Image.new('L', (0, 0)))
         self.exceptions = set(exceptions) if exceptions else set()
 
-    def create_image(self, text):
-        size = self.get_size(text)
-        image = Image.new('L', size, color='black')
-        d = ImageDraw.Draw(image)
-        d.text((0, 0), text, "white", spacing=0, font=self.font, direction='rtl', language='fa-IR')
-        return np.array(image)
-
     def create_meta_image(self, text):
+        """Generates metadata for ImageMeta class to use"""
         image = self.create_image(text)
         boxes = self.get_rectangles(image, text)
         parts = self.get_characters(text)
@@ -77,7 +116,16 @@ class TextGen:
         meta = ImageMeta(text, image, parts, visible_parts, boxes)
         return meta
 
+    def create_image(self, text):
+        """Generates image by given font and text"""
+        size = self.get_size(text)
+        image = Image.new('L', size, color='black')
+        d = ImageDraw.Draw(image)
+        d.text((0, 0), text, "white", spacing=0, font=self.font, direction='rtl', language='fa-IR')
+        return np.array(image)
+
     def get_rectangles(self, image: np.ndarray, text):
+        """Generates bboxes using generated image and the containing text"""
         x1i = 0
         widths = self.get_character_widths(text)
         image = image.transpose()
@@ -183,6 +231,7 @@ class TextGen:
         return a
 
     def get_size(self, text) -> Tuple[int, int]:
+        """Returns image size of the given text. Font itself is effective on the size."""
         return self._dummy.textsize(text, spacing=0, font=self.font, language='fa_IR', direction="rtl")
 
     def get_characters(self, text):
@@ -213,8 +262,8 @@ class TextGen:
         n = len(text)
         items = []
         while n > 0:
-            c = text[n - 1]
-            if c == " ":
+            lastc = text[n - 1]
+            if lastc == " ":
                 n -= 1
                 continue
             s = text[:n]
@@ -227,6 +276,7 @@ class TextGen:
         return items
 
     def _search_exception_backward(self, end, text):
+        """wtf"""
         if self.exceptions:
             for item in self.exceptions:
                 n = len(item)
@@ -250,6 +300,16 @@ class TextGen:
 
     @staticmethod
     def is_joined(str0, str1):
+        """
+        Checks if two string are joinable.
+
+        Args:
+            str0: first string
+            str1: second string
+
+        returns:
+            bool
+        """
         if str0:
             c0 = str0[-1]
         else:
