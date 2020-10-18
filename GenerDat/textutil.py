@@ -55,6 +55,7 @@ class ImageMeta:
         """
         image = Image.fromarray(self.image.transpose() if transpose else self.image)
         image.save(path)
+        return None
 
     def save_image_with_boxes(self, path, color="yellow", transpose=True):
         """
@@ -74,6 +75,7 @@ class ImageMeta:
             image[x0, y0:y1 + 1] = value
             image[x1, y0:y1 + 1] = value
         Image.fromarray(image.transpose((1, 0, 2))).save(path)
+        return None
 
     def to_dict(self, path):
         """
@@ -282,7 +284,7 @@ class TextGen:
                 n = len(item)
                 if n <= end and item == text[end - n:end]:
                     return item
-        return ''
+        return None
 
     def get_visible_parts(self, text):
         chars = self.get_characters(text)
@@ -374,6 +376,7 @@ def main():
                     file.flush()
                 js = ",\n{}".format(js)
             file.write(js)
+    return None
 
 
 if __name__ == '__main__':
