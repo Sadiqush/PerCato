@@ -6,7 +6,7 @@ from itertools import product
 from typing import List, Tuple, Iterable, Set
 
 import numpy as np
-import pandas as pd
+from skimage.measure import label
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 JOINER = u'\u200d'
