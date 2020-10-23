@@ -3,9 +3,8 @@ import pathlib
 import os
 from itertools import product
 from typing import List, Tuple, Iterable, Set
-
+from skimage.measure import label
 import numpy as np
-import pandas as pd
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 JOINER = u'\u200d'
@@ -222,18 +221,9 @@ class TextGen:
         return label_pixels
 
     def get_connected_pixels(self, image: np.ndarray, i, j):
-        a = [(i, j)]
-        w, h = image.shape
-        idx, n = 0, 1
-        while idx < n:
-            i, j = a[idx]
-            to_check = [(i + 1, j), (i, j + 1), (i - 1, j), (i, j - 1)]
-            for x, y in to_check:
-                if 0 <= x < w and 0 <= y < h and (x, y) not in a and image[x, y] > 0:
-                    a.append((x, y))
-                    n += 1
-            idx += 1
-        return a
+        labels: np.ndarray = label(image > 0)
+        coords = np.where(labels == labels[i, j])
+        return list(zip(*coords))
 
     def get_size(self, text) -> Tuple[int, int]:
         """Returns image size of the given text. Font itself is effective on the size."""
@@ -357,7 +347,9 @@ def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) 
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    words = pd.read_csv(os.path.join(ocr_path, "words.csv")).to_numpy().flatten()
+    with open(('words.csv'), 'r', encoding='utf-8') as file:
+        text = file.read()
+        words = list(text.split('\n'))
     words = [word for word in words if all(c in ALPHABET for c in word)]
     words = np.random.choice(words, batch).tolist()
     words = ['لالایی'] + words
@@ -389,6 +381,6 @@ if __name__ == '__main__':
     image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data3/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
-    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
+    font_path = os.path.join("b_nazanin.ttf")
     batch = 30
     main()
