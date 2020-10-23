@@ -1,12 +1,10 @@
 import json
 import pathlib
 import os
-import random
 from itertools import product
 from typing import List, Tuple, Iterable, Set
-
+from skimage.measure import label
 import numpy as np
-import pandas as pd
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 JOINER = u'\u200d'
@@ -33,11 +31,11 @@ class ImageMeta:
     """
     id = 0
 
-    def __init__(self, text, image: np.array, parts, boxes, id=-1):
+    def __init__(self, text, image: np.array, parts, visible_parts, boxes, id=-1):
         self.text = text
         self.image = image
         self.parts = parts
-        # self.visible_parts = visible_parts
+        self.visible_parts = visible_parts
         self.boxes = boxes
         self.length = len(parts)
         if id > 0:
@@ -91,7 +89,7 @@ class ImageMeta:
         h, w = self.image.shape
         # TODO: COCO standard format
         json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
-                    "width": w, "height": h, "boxes": self.boxes, "n": self.length}
+                    "classes": self.visible_parts, "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return json_dic
 
 
@@ -115,8 +113,8 @@ class TextGen:
         image = self.create_image(text)
         boxes = self.get_rectangles(image, text)
         parts = self.get_characters(text)
-        # visible_parts = self.get_visible_parts(text)
-        meta = ImageMeta(text, image, parts, boxes)
+        visible_parts = self.get_visible_parts(text)
+        meta = ImageMeta(text, image, parts, visible_parts, boxes)
         return meta
 
     def create_image(self, text):
@@ -223,18 +221,9 @@ class TextGen:
         return label_pixels
 
     def get_connected_pixels(self, image: np.ndarray, i, j):
-        a = [(i, j)]
-        w, h = image.shape
-        idx, n = 0, 1
-        while idx < n:
-            i, j = a[idx]
-            to_check = [(i + 1, j), (i, j + 1), (i - 1, j), (i, j - 1)]
-            for x, y in to_check:
-                if 0 <= x < w and 0 <= y < h and (x, y) not in a and image[x, y] > 0:
-                    a.append((x, y))
-                    n += 1
-            idx += 1
-        return a
+        labels: np.ndarray = label(image > 0)
+        coords = np.where(labels == labels[i, j])
+        return list(zip(*coords))
 
     def get_size(self, text) -> Tuple[int, int]:
         """Returns image size of the given text. Font itself is effective on the size."""
@@ -305,27 +294,20 @@ class TextGen:
             visible_parts.append(c)
             i += 1
         visible_parts.append(chars[i])
-        print(visible_parts)
         return visible_parts
 
     @staticmethod
-    def get_join_alphabet():
-        """Create a new alphabet with all joinable letters have JOINER on left and right"""
-        chars = list(JOINABLE_LETTERS)
-        new_alpha = chars.copy()
-        for c in chars:
-            r = c + JOINER
-            new_alpha.append(r)
-            l = JOINER + c
-            new_alpha.append(l)
-            b = JOINER + c + JOINER
-            new_alpha.append(b)
-        # print(new_alpha)
-        return new_alpha
-
-    @staticmethod
     def is_joined(str0, str1):
-        """Checks if two string are joinable. returns bool."""
+        """
+        Checks if two string are joinable.
+
+        Args:
+            str0: first string
+            str1: second string
+
+        returns:
+            bool
+        """
         if str0:
             c0 = str0[-1]
         else:
@@ -362,32 +344,14 @@ def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) 
         return {''.join(tup) for tup in tuples}
 
 
-def get_equal_words(length: int, batch: int, all_join=True) -> List:
-    """Generate random words with equal weight (probability) for letters"""
-    if all_join:    # TODO: buggy because of different alphabet lengths
-        # Use JOINER for letters.
-        letters = list(NON_JOINABLE_LETTERS) + TextGen.get_join_alphabet()
-    else:
-        letters = ALPHABET
-    # print(letters)
-
-    words = []
-    random.seed(42)
-    for i in range(batch):
-        word = ''.join(random.choices(letters, k=length, weights=[1] * len(letters)))
-        words.append(word)
-    # print(words)
-
-    return words
-
-
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    # words = pd.read_csv(os.path.join(ocr_path, "words.csv")).to_numpy().flatten()
-    # words = [word for word in words if all(c in ALPHABET for c in word)]
-    # words = np.random.choice(words, batch).tolist()
-    words = get_equal_words(1, batch, False)
+    with open(('words.csv'), 'r', encoding='utf-8') as file:
+        text = file.read()
+        words = list(text.split('\n'))
+    words = [word for word in words if all(c in ALPHABET for c in word)]
+    words = np.random.choice(words, batch).tolist()
     words = ['لالایی'] + words
     print("start...")
     n = len(words)
@@ -399,7 +363,7 @@ def main():
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
             meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
-            # print(f"{meta.id}) {word}")
+            print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
                 js = "[{}".format(js)
@@ -417,7 +381,6 @@ if __name__ == '__main__':
     image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data3/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
-    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 10000
-    length = 1
+    font_path = os.path.join("b_nazanin.ttf")
+    batch = 30
     main()
