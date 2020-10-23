@@ -377,12 +377,16 @@ def get_equal_words(length: int, batch: int, all_join=True) -> List:
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    # words = pd.read_csv(os.path.join(ocr_path, "words.csv")).to_numpy().flatten()
-    # words = [word for word in words if all(c in ALPHABET for c in word)]
-    # words = np.random.choice(words, batch).tolist()
-    words = get_equal_words(3, batch, True)
+    if is_meaning:
+        with open(('words.csv'), 'r', encoding='utf-8') as file:
+            text = file.read()
+            words = list(text.split('\n'))
+        words = [word for word in words if all(c in ALPHABET for c in word)]
+        words = np.random.choice(words, batch).tolist()
+    else:
+        words = get_equal_words(3, batch, True)
     words = ['لالایی'] + words
-    #  print(words)
+    # print(words)
     print("start...")
     n = len(words)
     flush_period = 100
@@ -414,4 +418,5 @@ if __name__ == '__main__':
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 10
     length = 1
+    is_meaning = True
     main()
