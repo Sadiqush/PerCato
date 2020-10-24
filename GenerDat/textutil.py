@@ -311,7 +311,7 @@ class TextGen:
 
     @staticmethod
     def get_join_alphabet(view=False):
-        """Create a new alphabet with all joinable letters have JOINER on left and right"""
+        """Create an alphabet that consists of all kinds of models of arabic letters"""
         letters = []
         for c in range(65165, 65264):  # TODO: Its arabic unicode. Use persian alphabet
             letters.append(chr(c))
