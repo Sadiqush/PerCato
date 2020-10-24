@@ -313,8 +313,14 @@ class TextGen:
     def get_join_alphabet(view=False):
         """Create an alphabet that consists of all kinds of models of arabic letters"""
         letters = []
-        for c in range(65165, 65264):  # TODO: Its arabic unicode. Use persian alphabet
+        for c in range(65165, 65264):
             letters.append(chr(c))
+        persians = ["\uFB56", "\uFB57", "\uFB58", "\uFB59", "\uFB7A",
+                    "\uFB7B", "\uFB7C", "\uFB7D", "\uFBA4", "\uFBA5",
+                    "\uFBA6", "\uFB8A", "\uFB8B", "\uFB92", "\uFB93",
+                    "\uFB94", "\uFB95", "\u0623", "\uFE8B", "\uFE8A",
+                    "\uFE8C", "\u0626", "\u0624"]
+        letters = letters + persians
         if view:
             print("the alphabet is a total of %s:" % len(letters))
             for i in letters:
@@ -421,6 +427,6 @@ if __name__ == '__main__':
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 10
-    length = 3
+    length = 5
     is_meaningful = False
     main()
