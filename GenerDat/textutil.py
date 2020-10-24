@@ -88,7 +88,7 @@ class ImageMeta:
             json_dic (dic): json block of the image.
         """
         h, w = self.image.shape
-        # TODO: COCO standard format
+        # TODO: Use COCO standard format
         json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
                     "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return json_dic
@@ -101,7 +101,7 @@ class TextGen:
     Args:
         font_path (str): absolute path for the .ttf font file.
         font_size (int): font size for the text.
-        exceptions: wtf.
+        exceptions: exception words, e.g. لا.
     """
 
     def __init__(self, font_path, font_size, exceptions: Iterable[str] = None):
@@ -146,6 +146,9 @@ class TextGen:
             img_pixels = self.get_connected_pixels(image, i, j)
             # img_pixels = image
             seg_pixels = [pixel for pixel in img_pixels if x0 <= pixel[0] <= x1 and y0 <= pixel[1] <= y1]
+            # if (np.sum(seg_pixels) > 0) < 4:
+            #     good = False
+            #     return good, seg_pixels
             ns, ni = len(seg_pixels), len(img_pixels)
             xs = []
             ys = []
@@ -222,6 +225,14 @@ class TextGen:
         return label_pixels
 
     def get_connected_pixels(self, image: np.ndarray, i, j):
+        # from skimage.filters import threshold_otsu
+        # from skimage.segmentation import clear_border
+        # from skimage.measure import label
+        # from skimage.morphology import closing, square
+        # thresh = threshold_otsu(image)
+        # bw = closing(image > thresh, square(3))
+        # cleared = clear_border(bw)
+        # labels: np.ndarray = label(cleared)
         labels: np.ndarray = label(image > 0)
         coords = np.where(labels == labels[i, j])
         return list(zip(*coords))
@@ -255,9 +266,6 @@ class TextGen:
             widths.append(width + 1 - w)
         widths.append(width - 1)
         return widths
-
-    def get_character_size(self):
-        pass
 
     def reduce(self, text):
         """why tf I exist?"""
@@ -302,19 +310,16 @@ class TextGen:
         return visible_parts
 
     @staticmethod
-    def get_join_alphabet():
+    def get_join_alphabet(view=False):
         """Create a new alphabet with all joinable letters have JOINER on left and right"""
-        chars = list(JOINABLE_LETTERS)
-        new_alpha = chars.copy()
-        for c in chars:
-            r = c + JOINER + ' '
-            new_alpha.append(r)
-            l = ' ' + JOINER + c
-            new_alpha.append(l)
-            b = JOINER + c + JOINER
-            new_alpha.append(b)
-        # print(new_alpha)
-        return new_alpha
+        letters = []
+        for c in range(65165, 65264):  # TODO: Its arabic unicode. Use persian alphabet
+            letters.append(chr(c))
+        if view:
+            print("the alphabet is a total of %s:" % len(letters))
+            for i in letters:
+                print(f"{i}\t", end="")
+        return letters
 
     @staticmethod
     def is_joined(str0, str1):
@@ -357,15 +362,14 @@ def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) 
 
 def get_equal_words(length: int, batch: int, all_join=True) -> List:
     """Generate random words with equal weight (probability) for letters"""
-    if all_join:    # TODO: buggy because of different alphabet lengths
-        # Use JOINER for letters.
-        letters = list(NON_JOINABLE_LETTERS) + TextGen.get_join_alphabet()
+    if all_join:
+        letters = TextGen.get_join_alphabet(view=True)
     else:
         letters = ALPHABET
     # print(letters)
 
     words = []
-    # random.seed(42)
+    random.seed(42)
     for i in range(batch):
         word = ''.join(random.choices(letters, k=length, weights=[1] * len(letters)))
         words.append(word)
@@ -377,16 +381,16 @@ def get_equal_words(length: int, batch: int, all_join=True) -> List:
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    if is_meaning:
-        with open(('words.csv'), 'r', encoding='utf-8') as file:
+    if is_meaningful:
+        with open('words.csv', 'r', encoding='utf-8') as file:
             text = file.read()
             words = list(text.split('\n'))
         words = [word for word in words if all(c in ALPHABET for c in word)]
         words = np.random.choice(words, batch).tolist()
     else:
-        words = get_equal_words(3, batch, True)
+        words = get_equal_words(length, batch, True)
     words = ['لالایی'] + words
-    # print(words)
+    print(words)
     print("start...")
     n = len(words)
     flush_period = 100
@@ -412,11 +416,11 @@ def main():
 
 
 if __name__ == '__main__':
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data3/images')
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data4/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 10
-    length = 1
-    is_meaning = True
+    length = 3
+    is_meaningful = False
     main()
