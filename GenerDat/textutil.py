@@ -290,7 +290,7 @@ class TextGen:
         if self.exceptions:
             for item in self.exceptions:
                 n = len(item)
-                if n <= leng and item == text[leng - n:leng]:    # [leng - n:leng]?
+                if n <= leng and item == text[leng - n:leng]:  # [leng - n:leng]?
                     return item
         return None
 
@@ -319,13 +319,27 @@ class TextGen:
                     "\uFB7B", "\uFB7C", "\uFB7D", "\uFBA4", "\uFBA5",
                     "\uFBA6", "\uFB8A", "\uFB8B", "\uFB92", "\uFB93",
                     "\uFB94", "\uFB95", "\u0623", "\uFE8B", "\uFE8A",
-                    "\uFE8C", "\u0626", "\u0624"]
+                    "\uFE8C", "\u0626", "\u0624", "\u06CC", "\uFEF3",
+                    "\uFEF4", "\uFBFD"]
         letters = letters + persians
         if view:
             print("the alphabet is a total of %s:" % len(letters))
             for i in letters:
                 print(f"{i}\t", end="")
-        return letters
+        new_letters = ['ا', 'ﺎ', 'ب', 'ﺐ', 'ﺑ', 'ﺒ', 'ت', 'ﺖ',
+                       'ﺗ', 'ﺘ', 'ث', 'ﺚ', 'ﺛ', 'ﺜ', 'ج', 'ﺞ', 'ﺟ', 'ﺠ',
+                       'ح', 'ﺢ', 'ﺣ', 'ﺤ', 'خ', 'ﺦ', 'ﺧ', 'ﺨ', 'د', 'ﺪ',
+                       'ذ', 'ﺬ', 'ر', 'ﺮ', 'ز', 'ﺰ', 'س', 'ﺲ', 'ﺳ', 'ﺴ',
+                       'ش', 'ﺶ', 'ﺷ', 'ﺸ', 'ص', 'ﺺ', 'ﺻ', 'ﺼ', 'ض', 'ﺾ',
+                       'ﺿ', 'ﻀ', 'ط', 'ﻂ', 'ظ', 'ﻆ',
+                       'ع', 'ﻊ', 'ﻋ', 'ﻌ', 'غ', 'ﻎ', 'ﻏ', 'ﻐ', 'ف', 'ﻒ',
+                       'ﻓ', 'ﻔ', 'ق', 'ﻖ', 'ﻗ', 'ﻘ', 'ک', 'ﻚ', 'ﻛ', 'ﻜ',
+                       'ل', 'ﻞ', 'ﻟ', 'ﻠ', 'م', 'ﻢ', 'ﻣ', 'ﻤ', 'ن', 'ﻦ',
+                       'ﻧ', 'ﻨ', 'ه', 'ﻪ', 'ﻫ', 'ﻬ', 'و', 'ﻮ', 'ی', 'پ',
+                       'ﭗ', 'ﭘ', 'ﭙ', 'چ', 'ﭻ', 'ﭼ', 'ﭽ',
+                       'ژ', 'ﮋ', 'گ', 'ﮓ', 'ﮔ', 'ﮕ', 'أ', 'ﺋ', 'ﺊ', 'ﺌ',
+                       'ئ', 'ؤ', 'لا', 'لله']   # TODO: FE check.
+        return new_letters
 
     @staticmethod
     def is_joined(str0, str1):
@@ -396,7 +410,7 @@ def main():
     else:
         words = get_equal_words(length, batch, True)
     words = ['لالایی'] + words
-    print(words)
+    # print(words)
     print("start...")
     n = len(words)
     flush_period = 100
@@ -406,7 +420,7 @@ def main():
             word = words[i]
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
-            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+            # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
@@ -422,7 +436,7 @@ def main():
 
 
 if __name__ == '__main__':
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data4/images')
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data8.1/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
