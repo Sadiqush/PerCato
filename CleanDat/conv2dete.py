@@ -1,5 +1,6 @@
 import json
 import os
+# import GenerDat.textutil
 
 
 def convert2detectron(img_dir):
@@ -76,15 +77,20 @@ def slice_images(img_dir, json_file, output_name):
     output.close()
 
 
-def map_unis():
-    """This is used to change normal letter forms to isolated forms."""
-    # normal --> isolated (06xx --> FExx)
-    al_map = {'ض': 'ﺽ', 'ص': 'ﺹ', 'ث': 'ﺙ', 'ق': 'ﻕ', 'ف': 'ﻑ', 'غ': 'ﻍ', 'ع': 'ﻉ',
+def map_unis(parts: list) -> list:
+    """
+    This is used to change normal letter forms to isolated forms.
+    input normal, output isolated (06xx to FExx).
+    """
+    alph_map = {'ض': 'ﺽ', 'ص': 'ﺹ', 'ث': 'ﺙ', 'ق': 'ﻕ', 'ف': 'ﻑ', 'غ': 'ﻍ', 'ع': 'ﻉ',
               'ه': 'ﻩ', 'خ': 'ﺥ', 'ح': 'ﺡ', 'ج': 'ﺝ', 'چ': 'ﭺ', 'ش': 'ﺵ', 'س': 'ﺱ',
               'ی': 'ﯼ', 'ب': 'ﺏ', 'ل': 'ﻝ', 'ت': 'ﺕ', 'ن': 'ﻥ', 'م': 'ﻡ', 'ک': 'ﮎ',
               'گ': 'ﮒ', 'ظ': 'ﻅ', 'ط': 'ﻁ', 'پ': 'ﭖ', 'ئ': 'ﺉ', 'ر': 'ﺭ', 'ز': 'ﺯ',
               'د': 'ﺩ', 'ذ': 'ﺫ', 'و': 'ﻭ', 'ا': 'ﺍ', 'آ': 'ﺁ', 'أ': 'ﺃ'}
-    return al_map
+    outpart = []
+    for c in parts:
+        outpart.append(alph_map[c])
+    return outpart
 
 
 if __name__ == "__main__":
@@ -95,4 +101,4 @@ if __name__ == "__main__":
     # slice_json(project_path, "final-pretty.json")
     # slice_images(project_path + "/images", "val_ocr.json", "val_images.txt")
     # slice_images(project_path + "/images", "train_ocr.json", "train_images.txt")
-    map_unis()
+    # map_unis(["ص", "ا", "د"])
