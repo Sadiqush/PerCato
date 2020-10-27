@@ -225,14 +225,6 @@ class TextGen:
         return label_pixels
 
     def get_connected_pixels(self, image: np.ndarray, i, j):
-        # from skimage.filters import threshold_otsu
-        # from skimage.segmentation import clear_border
-        # from skimage.measure import label
-        # from skimage.morphology import closing, square
-        # thresh = threshold_otsu(image)
-        # bw = closing(image > thresh, square(3))
-        # cleared = clear_border(bw)
-        # labels: np.ndarray = label(cleared)
         labels: np.ndarray = label(image > 0)
         coords = np.where(labels == labels[i, j])
         return list(zip(*coords))
@@ -259,16 +251,17 @@ class TextGen:
             return [w - 1]
         reduced = self.reduce(text)
         # print(reduced)
-        widths = []
         width, _ = self.get_size(text)
+        widths = []
         for item in reduced[1:]:
             w, _ = self.get_size(item)
             widths.append(width + 1 - w)
         widths.append(width - 1)
+        # print(widths)
         return widths
 
     def reduce(self, text):
-        """why tf I exist?"""
+        """Return text char by char to get width of them, it also keeps errors away."""
         n = len(text)
         items = []
         while n > 0:
@@ -280,6 +273,7 @@ class TextGen:
             ex = self._search_exception_backward(n, text)
             count = len(ex) if ex else 1
             if self.is_joined(s, text[n:]):
+                # If we have dynamic chars in middle of text, it will keep them as joined.
                 s += JOINER
             items.append(s)
             n -= count
@@ -312,34 +306,33 @@ class TextGen:
     @staticmethod
     def get_join_alphabet(view=False):
         """Create an alphabet that consists of all kinds of models of arabic letters"""
-        letters = []
-        for c in range(65165, 65264):
-            letters.append(chr(c))
-        persians = ["\uFB56", "\uFB57", "\uFB58", "\uFB59", "\uFB7A",
-                    "\uFB7B", "\uFB7C", "\uFB7D", "\uFBA4", "\uFBA5",
-                    "\uFBA6", "\uFB8A", "\uFB8B", "\uFB92", "\uFB93",
-                    "\uFB94", "\uFB95", "\u0623", "\uFE8B", "\uFE8A",
-                    "\uFE8C", "\u0626", "\u0624", "\u06CC", "\uFEF3",
-                    "\uFEF4", "\uFBFD"]
-        letters = letters + persians
+        # letters = []
+        # for c in range(65165, 65264):
+        #     letters.append(chr(c))
+        # persians = ["\uFB56", "\uFB57", "\uFB58", "\uFB59", "\uFB7A",
+        #             "\uFB7B", "\uFB7C", "\uFB7D", "\uFBA4", "\uFBA5",
+        #             "\uFBA6", "\uFB8A", "\uFB8B", "\uFB92", "\uFB93",
+        #             "\uFB94", "\uFB95", "\u0623", "\uFE8B", "\uFE8A",
+        #             "\uFE8C", "\u0626", "\u0624", "\u06CC", "\uFEF3",
+        #             "\uFEF4", "\uFBFD"]
+        # letters = letters + persians
+
+        letters = ['ﺍ', 'ﺎ', 'ﺏ', 'ﺐ', 'ﺑ', 'ﺒ', 'ﺕ', 'ﺖ', 'ﺗ', 'ﺘ', 'ﺙ',
+                   'ﺚ', 'ﺛ', 'ﺜ', 'ﺝ', 'ﺞ', 'ﺟ', 'ﺠ', 'ﺡ', 'ﺢ', 'ﺣ', 'ﺤ',
+                   'ﺥ', 'ﺦ', 'ﺧ', 'ﺨ', 'ﺩ', 'ﺪ', 'ﺫ', 'ﺬ', 'ﺭ', 'ﺮ', 'ﺯ',
+                   'ﺰ', 'ﺱ', 'ﺲ', 'ﺳ', 'ﺴ', 'ﺵ', 'ﺶ', 'ﺷ', 'ﺸ', 'ﺹ', 'ﺺ',
+                   'ﺻ', 'ﺼ', 'ﺽ', 'ﺾ', 'ﺿ', 'ﻀ', 'ﻁ', 'ﻂ', 'ﻅ', 'ﻆ', 'ﻉ',
+                   'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ', 'ﻑ', 'ﻒ', 'ﻓ', 'ﻔ',
+                   'ﻕ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﮎ', 'ﻚ', 'ﻛ', 'ﻜ', 'ﻝ', 'ﻞ', 'ﻟ',
+                   'ﻠ', 'ﻡ', 'ﻢ', 'ﻣ', 'ﻤ', 'ﻥ', 'ﻦ', 'ﻧ', 'ﻨ', 'ﻩ', 'ﻪ',
+                   'ﻫ', 'ﻬ', 'ﻭ', 'ﻮ', 'ﯼ', 'ﭖ', 'ﭗ', 'ﭘ', 'ﭙ', 'ﭺ', 'ﭻ',
+                   'ﭼ', 'ﭽ', 'ژ', 'ﮋ', 'ﮒ', 'ﮓ', 'ﮔ', 'ﮕ', 'ﺃ', 'ﺋ', 'ﺊ',
+                   'ﺌ', 'ﺉ', 'ﺁ', 'ؤ', 'لا']
         if view:
             print("the alphabet is a total of %s:" % len(letters))
             for i in letters:
                 print(f"{i}\t", end="")
-        new_letters = ['ا', 'ﺎ', 'ب', 'ﺐ', 'ﺑ', 'ﺒ', 'ت', 'ﺖ',
-                       'ﺗ', 'ﺘ', 'ث', 'ﺚ', 'ﺛ', 'ﺜ', 'ج', 'ﺞ', 'ﺟ', 'ﺠ',
-                       'ح', 'ﺢ', 'ﺣ', 'ﺤ', 'خ', 'ﺦ', 'ﺧ', 'ﺨ', 'د', 'ﺪ',
-                       'ذ', 'ﺬ', 'ر', 'ﺮ', 'ز', 'ﺰ', 'س', 'ﺲ', 'ﺳ', 'ﺴ',
-                       'ش', 'ﺶ', 'ﺷ', 'ﺸ', 'ص', 'ﺺ', 'ﺻ', 'ﺼ', 'ض', 'ﺾ',
-                       'ﺿ', 'ﻀ', 'ط', 'ﻂ', 'ظ', 'ﻆ',
-                       'ع', 'ﻊ', 'ﻋ', 'ﻌ', 'غ', 'ﻎ', 'ﻏ', 'ﻐ', 'ف', 'ﻒ',
-                       'ﻓ', 'ﻔ', 'ق', 'ﻖ', 'ﻗ', 'ﻘ', 'ک', 'ﻚ', 'ﻛ', 'ﻜ',
-                       'ل', 'ﻞ', 'ﻟ', 'ﻠ', 'م', 'ﻢ', 'ﻣ', 'ﻤ', 'ن', 'ﻦ',
-                       'ﻧ', 'ﻨ', 'ه', 'ﻪ', 'ﻫ', 'ﻬ', 'و', 'ﻮ', 'ی', 'پ',
-                       'ﭗ', 'ﭘ', 'ﭙ', 'چ', 'ﭻ', 'ﭼ', 'ﭽ',
-                       'ژ', 'ﮋ', 'گ', 'ﮓ', 'ﮔ', 'ﮕ', 'أ', 'ﺋ', 'ﺊ', 'ﺌ',
-                       'ئ', 'ؤ', 'لا', 'لله']   # TODO: FE check.
-        return new_letters
+        return letters
 
     @staticmethod
     def is_joined(str0, str1):
@@ -386,7 +379,6 @@ def get_equal_words(length: int, batch: int, all_join=True) -> List:
         letters = TextGen.get_join_alphabet(view=True)
     else:
         letters = ALPHABET
-    # print(letters)
 
     words = []
     random.seed(42)
@@ -418,9 +410,11 @@ def main():
         print(f"generating in: {image_path}")
         for i in range(n):
             word = words[i]
+            # word = "ﻗﺢنحص"
+            # print(word)
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
-            # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
@@ -436,11 +430,12 @@ def main():
 
 
 if __name__ == '__main__':
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data8.1/images')
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data9/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 10
     length = 5
     is_meaningful = False
-    main()
+    print(ALPHABET)
+    # main()
