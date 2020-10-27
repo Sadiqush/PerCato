@@ -278,9 +278,10 @@ class TextGen:
             s = text[:n]
             ex = self._search_exception_backward(n, text)
             count = len(ex) if ex else 1
-            # if self.is_joined(s, text[n:]):
-            #     # If we have dynamic chars in middle of text, it will keep them as joined.
-            #     s += JOINER
+            if is_meaningful:
+                if self.is_joined(s, text[n:]):
+                    # If we have dynamic chars in middle of text, it will keep them as joined.
+                    s += JOINER
             items.append(s)
             n -= count
         return items
@@ -407,7 +408,7 @@ def main():
         words = np.random.choice(words, batch).tolist()
     else:
         words = get_equal_words(length, batch, True)
-    words = ['لالایی'] + words
+    # words = ['لالایی'] + words
     print("start...")
     n = len(words)
     flush_period = 100
