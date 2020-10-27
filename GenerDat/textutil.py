@@ -272,9 +272,9 @@ class TextGen:
             s = text[:n]
             ex = self._search_exception_backward(n, text)
             count = len(ex) if ex else 1
-            if self.is_joined(s, text[n:]):
-                # If we have dynamic chars in middle of text, it will keep them as joined.
-                s += JOINER
+            # if self.is_joined(s, text[n:]):
+            #     # If we have dynamic chars in middle of text, it will keep them as joined.
+            #     s += JOINER
             items.append(s)
             n -= count
         return items
@@ -433,7 +433,7 @@ if __name__ == '__main__':
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 10
+    batch = 30
     length = 5
     is_meaningful = False
     main()
