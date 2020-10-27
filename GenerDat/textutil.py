@@ -261,7 +261,7 @@ class TextGen:
         return widths
 
     def reduce(self, text):
-        """Return text char by char to get width of them, it also keeps errors away."""
+        """Gets a text and returns char by char, it also keeps errors away."""
         n = len(text)
         items = []
         while n > 0:
@@ -305,7 +305,7 @@ class TextGen:
 
     @staticmethod
     def get_join_alphabet(view=False):
-        """Create an alphabet that consists of all kinds of models of arabic letters"""
+        """Create an alphabet that consists of all forms of arabic letters"""
         # letters = []
         # for c in range(65165, 65264):
         #     letters.append(chr(c))
@@ -402,7 +402,6 @@ def main():
     else:
         words = get_equal_words(length, batch, True)
     words = ['لالایی'] + words
-    # print(words)
     print("start...")
     n = len(words)
     flush_period = 100
@@ -437,5 +436,4 @@ if __name__ == '__main__':
     batch = 10
     length = 5
     is_meaningful = False
-    print(ALPHABET)
-    # main()
+    main()
