@@ -1,9 +1,7 @@
 import json
 import pprint
-import textutil
-import sys
-sys.path.insert(0, '/home/sadegh/PycharmProjects/ocrdg/CleanDat')
-import conv2dete
+from GenerDat import textutil
+from CleanDat.conv2dete import map_unis
 import re
 
 
@@ -50,16 +48,17 @@ def compat_check(newalph):
 
 def fe_check(checkstr):
     """See all the chars in a list as unicode."""
-    res = (re.sub('.', lambda x: r'\u % 04X' % ord(x.group()), checkstr))
-    print(res)
+    for c in checkstr:
+        res = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), c))
+        print("%s is %s" % (c, res))
 
 
 def map_check(alph, checkdic):
     """See all the chars in a dictionary as unicode."""
     for c in alph:
-        mainc = (re.sub('.', lambda x: r'\u % 04X' % ord(x.group()), c))
+        mainc = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), c))
         ans = checkdic[c]
-        res = (re.sub('.', lambda x: r'\u % 04X' % ord(x.group()), ans))
+        res = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), ans))
         print(c, ' --> ', mainc, " --> ", res)
     return None
 
@@ -67,11 +66,12 @@ def map_check(alph, checkdic):
 if __name__ == "__main__":
     pp = pprint.PrettyPrinter(indent=2)
     json_file = '/home/sadegh/Projects/OCR/datasets/data8.1/final.json'
-    new_alph = textutil.TextGen.get_join_alphabet(view=True)
+    new_alph = textutil.TextGen.get_join_alphabet(view=False)
     org_alph = textutil.ALPHABET
-    map_dic = conv2dete.map_unis()
     # sum_class(json_file)
     # sum_list(json_file)
     # compat_check(new_alph)
     # fe_check(str(new_alph))
-    map_check(org_alph, map_dic)
+    # map_check(org_alph, map_dic)
+    niga = map_unis(["ص", "ا", "د"])
+    print(niga)
