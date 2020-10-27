@@ -1,8 +1,5 @@
 import json
 import os
-import random
-from PIL import Image
-import numpy as np
 
 
 def convert2detectron(img_dir):
@@ -58,7 +55,7 @@ def slice_json(json_dir, input_name):
     json_path = os.path.join(json_dir, input_name)
     with open(json_path, 'r+') as file_obj:
         data = json.load(file_obj)
-        amount = int(len(data)*20/100)
+        amount = int(len(data) * 20 / 100)
         json_val = data[0:amount]
         json_train = data[amount:]
 
@@ -79,11 +76,23 @@ def slice_images(img_dir, json_file, output_name):
     output.close()
 
 
+def map_unis():
+    """This is used to change normal letter forms to isolated forms."""
+    # normal --> isolated (06xx --> FExx)
+    al_map = {'ض': 'ﺽ', 'ص': 'ﺹ', 'ث': 'ﺙ', 'ق': 'ﻕ', 'ف': 'ﻑ', 'غ': 'ﻍ', 'ع': 'ﻉ',
+              'ه': 'ﻩ', 'خ': 'ﺥ', 'ح': 'ﺡ', 'ج': 'ﺝ', 'چ': 'ﭺ', 'ش': 'ﺵ', 'س': 'ﺱ',
+              'ی': 'ﯼ', 'ب': 'ﺏ', 'ل': 'ﻝ', 'ت': 'ﺕ', 'ن': 'ﻥ', 'م': 'ﻡ', 'ک': 'ﮎ',
+              'گ': 'ﮒ', 'ظ': 'ﻅ', 'ط': 'ﻁ', 'پ': 'ﭖ', 'ئ': 'ﺉ', 'ر': 'ﺭ', 'ز': 'ﺯ',
+              'د': 'ﺩ', 'ذ': 'ﺫ', 'و': 'ﻭ', 'ا': 'ﺍ', 'آ': 'ﺁ', 'أ': 'ﺃ'}
+    return al_map
+
+
 if __name__ == "__main__":
-    project_path = "/home/sadegh/Projects/OCR/datasets/dgen2/v5"
+    project_path = "/home/sadegh/Projects/OCR/datasets/data4"
 
     # dataset_dicts = convert2detectron(project_path)
     # write_json(dataset_dicts, project_path, "final-formatted.json")
-    slice_json(project_path, "final-pretty.json")
-    slice_images(project_path + "/images", "val_ocr.json", "val_images.txt")
-    slice_images(project_path + "/images", "train_ocr.json", "train_images.txt")
+    # slice_json(project_path, "final-pretty.json")
+    # slice_images(project_path + "/images", "val_ocr.json", "val_images.txt")
+    # slice_images(project_path + "/images", "train_ocr.json", "train_images.txt")
+    map_unis()
