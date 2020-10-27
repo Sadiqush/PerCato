@@ -9,6 +9,8 @@ import numpy as np
 from skimage.measure import label
 from PIL import Image, ImageDraw, ImageFont, ImageColor
 
+from CleanDat.conv2dete import map_unis
+
 JOINER = u'\u200d'
 NON_JOINER = u'\u200c'
 JOINABLE_LETTERS = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
@@ -26,7 +28,7 @@ class ImageMeta:
     Args:
         text (str): input text for json.
         image (np.array): the output image.
-        parts (): text chars for json.
+        parts (list): text chars for json.
         boxes ():
         id (int): wtf
     """
@@ -89,8 +91,12 @@ class ImageMeta:
         """
         h, w = self.image.shape
         # TODO: Use COCO standard format
-        json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
-                    "width": w, "height": h, "boxes": self.boxes, "n": self.length}
+        if is_meaningful:
+            json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": map_unis(self.parts),
+                        "width": w, "height": h, "boxes": self.boxes, "n": self.length}
+        else:
+            json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
+                        "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return json_dic
 
 
@@ -433,7 +439,7 @@ if __name__ == '__main__':
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 30
+    batch = 10
     length = 5
-    is_meaningful = False
+    is_meaningful = True
     main()
