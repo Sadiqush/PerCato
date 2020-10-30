@@ -245,13 +245,15 @@ def main():
     return None
 
 
+image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data10/images')
+json_path = os.path.join(image_path, "../final.json")
+ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
+font_path = os.path.join(ocr_path, "b_nazanin.ttf")
+
+
 if __name__ == '__main__':
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data10/images')
-    json_path = os.path.join(image_path, "../final.json")
-    ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
-    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 500
     length = 5
     is_meaningful = False
-    ugly_mode = True
+    ugly_mode = False
     main()
