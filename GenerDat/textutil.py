@@ -218,12 +218,11 @@ def main():
         words = np.random.choice(words, batch).tolist()
     else:
         words = gen.char_manager.get_equal_words(length, batch)
-    n = min(len(words), batch)
     print("start...")
     flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
-        for i in range(n):
+        for i in range(batch):
             word = words[i]
             # print(word)
             meta = gen.create_meta_image(word)
@@ -233,7 +232,7 @@ def main():
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
                 js = "[{}".format(js)
-            elif i == n - 1:
+            elif i == batch - 1:
                 js = ",\n{}]".format(js)
             else:
                 if i % flush_period == 0:
@@ -248,7 +247,7 @@ if __name__ == '__main__':
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 100
+    batch = 10
     length = 5
-    is_meaningful = True
+    is_meaningful = False
     main()
