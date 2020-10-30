@@ -2,7 +2,7 @@ import json
 from enum import IntFlag
 from typing import Union, Dict
 import random
-from timeit import timeit
+# from timeit import timeit
 
 
 class Character:
@@ -126,7 +126,7 @@ class CharacterManager:
             letters = [letter.character for letter in self._letters_map.values()]
 
         words = []
-        random.seed(42)
+        # random.seed(42)
         for i in range(batch):
             word = ''.join(random.choices(letters, k=length, weights=[1] * len(letters)))
             words.append(word)
