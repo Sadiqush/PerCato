@@ -1,103 +1,21 @@
-import json
 import pathlib
-import os
-import random
-from itertools import product
-from typing import List, Tuple, Iterable, Set
-
+from typing import List, Tuple, Iterable
+from re import finditer
 import numpy as np
 from skimage.measure import label
-from PIL import Image, ImageDraw, ImageFont, ImageColor
+from PIL import Image, ImageDraw, ImageFont
+from GenerDat.characterutil import *
+from functools import reduce
+from GenerDat.container import ImageMeta
 
-from CleanDat.conv2dete import map_unis
-
-JOINER = u'\u200d'
-NON_JOINER = u'\u200c'
-JOINABLE_LETTERS = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
-NON_JOINABLE_LETTERS = "رزدذواآأ"
-ALPHABET = JOINABLE_LETTERS + NON_JOINABLE_LETTERS
-SYMBOLS = "|{}[]؛:«»؟<>ء\/.=-+()*،×٪٫٬!"
-NUMBERS = "۰۱۲۳۴۵۶۷۸۹"
-VOWEL_SYMBOLS = [chr(i) for i in (1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618, 1619, 1620, 1648)]
-
-
-class ImageMeta:
-    """
-    This class is used to export images along with generated metadata, aka making the json file.
-
-    Args:
-        text (str): input text for json.
-        image (np.array): the output image.
-        parts (list): text chars for json.
-        boxes ():
-        id (int): wtf
-    """
-    id = 0
-
-    def __init__(self, text, image: np.array, parts, boxes, id=-1):
-        self.text = text
-        self.image = image
-        self.parts = parts
-        # self.visible_parts = visible_parts
-        self.boxes = boxes
-        self.length = len(parts)
-        if id > 0:
-            self.id = id
-        else:
-            self.id = ImageMeta.id
-            ImageMeta.id += 1
-
-    def save_image(self, path, transpose=False):
-        """
-        Save image to the path.
-
-        Args:
-            path (str): absolute path for the image.
-            transpose (bool): transpose image array before saving (default: False).
-        """
-        image = Image.fromarray(self.image.transpose() if transpose else self.image)
-        image.save(path)
-        return None
-
-    def save_image_with_boxes(self, path, color="yellow", transpose=True):
-        """
-        Draw bbox on image and save to the path.
-
-        Args:
-            path (str): absolute path for the image.
-            color (str): the color of bbox.
-            transpose (bool): transpose image array before saving (default: True).
-        """
-        image = self.image.transpose()
-        image = np.concatenate([image[..., np.newaxis]] * 3, axis=2)
-        value = list(ImageColor.getrgb(color))
-        for x0, y0, x1, y1 in self.boxes:
-            image[x0:x1 + 1, y0] = value
-            image[x0:x1 + 1, y1] = value
-            image[x0, y0:y1 + 1] = value
-            image[x1, y0:y1 + 1] = value
-        Image.fromarray(image.transpose((1, 0, 2))).save(path)
-        return None
-
-    def to_dict(self, path):
-        """
-        Generate a json block for the image. It's not in COCO format.
-
-        Args:
-            path (str): non-absolute path (name) of the image.
-
-        Returns:
-            json_dic (dic): json block of the image.
-        """
-        h, w = self.image.shape
-        # TODO: Use COCO standard format
-        if is_meaningful:
-            json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": map_unis(self.parts),
-                        "width": w, "height": h, "boxes": self.boxes, "n": self.length}
-        else:
-            json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
-                        "width": w, "height": h, "boxes": self.boxes, "n": self.length}
-        return json_dic
+# JOINER = u'\u200d'
+# NON_JOINER = u'\u200c'
+# JOINABLE_LETTERS = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
+# NON_JOINABLE_LETTERS = "رزدذواآأ"
+# ALPHABET = JOINABLE_LETTERS + NON_JOINABLE_LETTERS
+# SYMBOLS = r"|{}[]؛:«»؟<>ء\/.=-+()*،×٪٫٬!"
+# NUMBERS = "۰۱۲۳۴۵۶۷۸۹"
+# VOWEL_SYMBOLS = [chr(i) for i in (1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618, 1619, 1620, 1648)]
 
 
 class TextGen:
@@ -110,15 +28,17 @@ class TextGen:
         exceptions: exception words, e.g. لا.
     """
 
-    def __init__(self, font_path, font_size, exceptions: Iterable[str] = None):
+    def __init__(self, font_path, font_size, exceptions: Iterable[str] = None, anti_alias=False):
+        self.char_manager = CharacterManager()
         self.font = ImageFont.truetype(font_path, size=font_size, encoding='utf-8')
         self._dummy = ImageDraw.Draw(Image.new('L', (0, 0)))
         self.exceptions = set(exceptions) if exceptions else set()
+        self.anti_alias = anti_alias
 
     def create_meta_image(self, text):
         """Generates metadata for ImageMeta class to use"""
         image = self.create_image(text)
-        boxes = self.get_rectangles(image, text)
+        boxes = self.get_boxes(image, text)
         parts = self.get_characters(text)
         # visible_parts = self.get_visible_parts(text)
         meta = ImageMeta(text, image, parts, boxes)
@@ -128,13 +48,14 @@ class TextGen:
         """Generates image by given font and text"""
         size = self.get_size(text)
         image = Image.new('L', size, color='black')
+        if self.anti_alias:
+            image = image.resize(image.size, resample=Image.ANTIALIAS)
         d = ImageDraw.Draw(image)
         d.text((0, 0), text, "white", spacing=0, font=self.font, direction='rtl', language='fa-IR')
         return np.array(image)
 
-    def get_rectangles(self, image: np.ndarray, text):
-        """Generates bboxes using generated image and the containing text"""
-        x1i = 0
+    def get_boxes(self, image: np.ndarray, text):
+        """Generates bounding boxes using generated image and the containing text"""
         widths = self.get_character_widths(text)
         image = image.transpose()
         width, height = image.shape
@@ -174,7 +95,7 @@ class TextGen:
             pixels = set()
             if x >= 0:
                 if y >= 0:
-                    raise Exception("Only one of the this shids must be passed.")
+                    raise Exception("Only one of the this shits must be passed.")
                 iterable = [(x, j) for j in range(y0, y1 + 1)]
             elif y >= 0:
                 iterable = [(i, y) for i in range(x0, x1 + 1)]
@@ -186,9 +107,7 @@ class TextGen:
                         continue
                     if (i, j) in good_pixels:
                         return False
-                    # print("herex:",x,j)
                     good, p = check_pixel(image, x0, x1, y0, y1, i, j)
-
                     if good:
                         good_pixels.update(p)
                         return False
@@ -219,7 +138,7 @@ class TextGen:
         pos = len(text)
         label_pixels = []
         image = image.transpose()
-        rectangles = self.get_rectangles(image, text)
+        rectangles = self.get_boxes(image, text)
         for x0, y0, x1, y1 in rectangles:
             pixels = []
             for i in range(x0, x1 + 1):
@@ -239,23 +158,28 @@ class TextGen:
         """Returns image size of the given text. Font itself is effective on the size."""
         return self._dummy.textsize(text, spacing=0, font=self.font, language='fa_IR', direction="rtl")
 
-    def get_characters(self, text):
+    def get_characters(self, text, freeze_letters=True):
         """Gets characters of a text as a list with respect to exceptions."""
-        n = len(text)
-        chars = []
-        while n > 0:
-            ex = self._search_exception_backward(n, text)
-            count = len(ex) if ex else 1
-            chars.append(text[n - count:n])
-            n -= count
+        chars = list(self.char_manager.fix_letters(text, reject_unknown=True)) if freeze_letters else list(text)
+        exception_spans = self.find_exceptions(text)
+        # print(exception_spans)
+        for s, e in exception_spans[::-1]:
+            chars[s] = reduce(str.__add__, chars[s:e])
+            del chars[s + 1:e]
+        # print(chars)
         return chars
 
     def get_character_widths(self, text) -> List[int]:
         """Returns a list containing widths (and only width) of characters in a text."""
-        if len(text) - text.count(JOINER) < 2:
+        if len(text) < 2:
             w, _ = self.get_size(text)
             return [w - 1]
-        reduced = self.reduce(text)
+        chars = self.get_characters(text)
+        reduced = []
+        n = len(chars)
+        for i in range(1, n + 1):
+            reduced.append("".join(chars[:i]))
+        reduced.reverse()
         # print(reduced)
         width, _ = self.get_size(text)
         widths = []
@@ -263,106 +187,13 @@ class TextGen:
             w, _ = self.get_size(item)
             widths.append(width + 1 - w)
         widths.append(width - 1)
-        # print(widths)
         return widths
 
-    def reduce(self, text):
-        """Gets a text and returns char by char, it also keeps errors away."""
-        n = len(text)
-        items = []
-        while n > 0:
-            lastc = text[n - 1]
-            if lastc == " ":
-                n -= 1
-                continue
-            s = text[:n]
-            ex = self._search_exception_backward(n, text)
-            count = len(ex) if ex else 1
-            if is_meaningful:
-                if self.is_joined(s, text[n:]):
-                    # If we have dynamic chars in middle of text, it will keep them as joined.
-                    s += JOINER
-            items.append(s)
-            n -= count
-        return items
-
-    def _search_exception_backward(self, leng, text):
-        """Finds exceptions (e.g. لا) in a text and returns it as a string."""
-        if self.exceptions:
-            for item in self.exceptions:
-                n = len(item)
-                if n <= leng and item == text[leng - n:leng]:  # [leng - n:leng]?
-                    return item
-        return None
-
-    def get_visible_parts(self, text):
-        chars = self.get_characters(text)
-        chars.reverse()
-        visible_parts = []
-        i, n = 0, len(chars)
-        while i < n - 1:
-            c = chars[i]
-            if self.is_joined(c, chars[i + 1]):
-                c += JOINER
-            visible_parts.append(c)
-            i += 1
-        visible_parts.append(chars[i])
-        print(visible_parts)
-        return visible_parts
-
-    @staticmethod
-    def get_join_alphabet(view=False):
-        """Create an alphabet that consists of all forms of arabic letters"""
-        # letters = []
-        # for c in range(65165, 65264):
-        #     letters.append(chr(c))
-        # persians = ["\uFB56", "\uFB57", "\uFB58", "\uFB59", "\uFB7A",
-        #             "\uFB7B", "\uFB7C", "\uFB7D", "\uFBA4", "\uFBA5",
-        #             "\uFBA6", "\uFB8A", "\uFB8B", "\uFB92", "\uFB93",
-        #             "\uFB94", "\uFB95", "\u0623", "\uFE8B", "\uFE8A",
-        #             "\uFE8C", "\u0626", "\u0624", "\u06CC", "\uFEF3",
-        #             "\uFEF4", "\uFBFD"]
-        # letters = letters + persians
-
-        letters = ['ﺍ', 'ﺎ', 'ﺏ', 'ﺐ', 'ﺑ', 'ﺒ', 'ﺕ', 'ﺖ', 'ﺗ', 'ﺘ', 'ﺙ',
-                   'ﺚ', 'ﺛ', 'ﺜ', 'ﺝ', 'ﺞ', 'ﺟ', 'ﺠ', 'ﺡ', 'ﺢ', 'ﺣ', 'ﺤ',
-                   'ﺥ', 'ﺦ', 'ﺧ', 'ﺨ', 'ﺩ', 'ﺪ', 'ﺫ', 'ﺬ', 'ﺭ', 'ﺮ', 'ﺯ',
-                   'ﺰ', 'ﺱ', 'ﺲ', 'ﺳ', 'ﺴ', 'ﺵ', 'ﺶ', 'ﺷ', 'ﺸ', 'ﺹ', 'ﺺ',
-                   'ﺻ', 'ﺼ', 'ﺽ', 'ﺾ', 'ﺿ', 'ﻀ', 'ﻁ', 'ﻂ', 'ﻅ', 'ﻆ', 'ﻉ',
-                   'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ', 'ﻑ', 'ﻒ', 'ﻓ', 'ﻔ',
-                   'ﻕ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﮎ', 'ﻚ', 'ﻛ', 'ﻜ', 'ﻝ', 'ﻞ', 'ﻟ',
-                   'ﻠ', 'ﻡ', 'ﻢ', 'ﻣ', 'ﻤ', 'ﻥ', 'ﻦ', 'ﻧ', 'ﻨ', 'ﻩ', 'ﻪ',
-                   'ﻫ', 'ﻬ', 'ﻭ', 'ﻮ', 'ﯼ', 'ﭖ', 'ﭗ', 'ﭘ', 'ﭙ', 'ﭺ', 'ﭻ',
-                   'ﭼ', 'ﭽ', 'ژ', 'ﮋ', 'ﮒ', 'ﮓ', 'ﮔ', 'ﮕ', 'ﺃ', 'ﺋ', 'ﺊ',
-                   'ﺌ', 'ﺉ', 'ﺁ', 'ؤ', 'لا']
-        if view:
-            print("the alphabet is a total of %s:" % len(letters))
-            for i in letters:
-                print(f"{i}\t", end="")
-        return letters
-
-    @staticmethod
-    def is_joined(str0, str1):
-        """Checks if two string are joinable. returns bool."""
-        if str0:
-            c0 = str0[-1]
-        else:
-            return False
-        if str1:
-            c1 = str1[0]
-        else:
-            return False
-        if c0 in JOINABLE_LETTERS and c1 not in SYMBOLS + NUMBERS:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def get_glyph(string, index):
-        c = string[index]
-        if TextGen.is_joined(string[:index + 1], string[index + 1:]):
-            c += JOINER
-        return c
+    def find_exceptions(self, text) -> List[Tuple[int, int]]:
+        if not self.exceptions:
+            return []
+        exceptions = [(match.start(), match.end()) for match in finditer("|".join(self.exceptions), text)]
+        return exceptions
 
 
 def get_mask(image: np.ndarray, x0, y0, x1, y1):
@@ -372,51 +203,23 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
     return mask.astype('b')
 
 
-def get_words_of_length(length: int, repetition=False, letters: str = ALPHABET) -> Set:
-    tuples = product(letters, repeat=length)
-    if repetition:
-        return {''.join(tup) for tup in tuples if len(set(tup)) == length}
-    else:
-        return {''.join(tup) for tup in tuples}
-
-
-def get_equal_words(length: int, batch: int, all_join=True) -> List:
-    """Generate random words with equal weight (probability) for letters"""
-    if all_join:
-        letters = TextGen.get_join_alphabet(view=True)
-    else:
-        letters = ALPHABET
-
-    words = []
-    random.seed(42)
-    for i in range(batch):
-        word = ''.join(random.choices(letters, k=length, weights=[1] * len(letters)))
-        words.append(word)
-    # print(words)
-
-    return words
-
-
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    if is_meaningful:
-        with open('words.csv', 'r', encoding='utf-8') as file:
-            text = file.read()
-            words = list(text.split('\n'))
-        words = [word for word in words if all(c in ALPHABET for c in word)]
-        words = np.random.choice(words, batch).tolist()
-    else:
-        words = get_equal_words(length, batch, True)
-    # words = ['لالایی'] + words
+    with open('words.csv', 'r', encoding='utf-8') as file:
+        text = file.read()
+        words = list(text.split('\n'))
+    # alphabet = list(gen.char_manager._letters_map)
+    # words = [word for word in words if all(c in alphabet for c in word)]
+    # words = np.random.choice(words, batch).tolist()
+    words = list(gen.char_manager.get_words_of_length(3))
+    n = min(len(words), batch)
     print("start...")
-    n = len(words)
     flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
         for i in range(n):
             word = words[i]
-            # word = "ﻗﺢنحص"
             # print(word)
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
@@ -436,10 +239,10 @@ def main():
 
 
 if __name__ == '__main__':
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data9/images')
-    json_path = os.path.join(image_path, "../final.json")
-    ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
-    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
+    image_path = 'images'
+    json_path = 'final.json'
+    ocr_path = '\0'
+    font_path = "b_nazanin.ttf"
     batch = 10
     length = 5
     is_meaningful = True
