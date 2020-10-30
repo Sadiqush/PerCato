@@ -215,7 +215,7 @@ def main():
     # alphabet = list(gen.char_manager._letters_map)
     # words = [word for word in words if all(c in alphabet for c in word)]
     # words = np.random.choice(words, batch).tolist()
-    words = list(gen.char_manager.get_equal_words(length, batch))
+    words = gen.char_manager.get_equal_words(length, batch)
     n = min(len(words), batch)
     print("start...")
     flush_period = 100
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 10
+    batch = 100
     length = 5
     is_meaningful = True
     main()
