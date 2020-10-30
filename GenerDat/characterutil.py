@@ -2,6 +2,7 @@ import json
 from enum import IntFlag
 from typing import Union, Dict, Set
 from itertools import product
+import random
 from timeit import timeit
 
 
@@ -97,13 +98,18 @@ class CharacterManager:
                 flag |= PersianLetterSide.BACK
         return self._letters_map[c].get_connected_form(flag)
 
-    def get_words_of_length(self, length: int, repetition=False) -> Set:
+    def get_equal_words(self, length: int, batch: int):
+        """Generate random words with equal weight (probability) for letters"""
         letters = [letter.character for letter in self._letters_map.values()]
-        tuples = product(letters, repeat=length)
-        if repetition:
-            return {''.join(tup) for tup in tuples if len(set(tup)) == length}
-        else:
-            return {''.join(tup) for tup in tuples}
+
+        words = []
+        random.seed(42)
+        for i in range(batch):
+            word = ''.join(random.choices(letters, k=length, weights=[1] * len(letters)))
+            words.append(word)
+        # print(words)
+
+        return words
 
 
 if __name__ == '__main__':

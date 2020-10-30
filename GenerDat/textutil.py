@@ -1,9 +1,12 @@
 import pathlib
 from typing import List, Tuple, Iterable
 from re import finditer
+import os
+
 import numpy as np
 from skimage.measure import label
 from PIL import Image, ImageDraw, ImageFont
+
 from GenerDat.characterutil import *
 from functools import reduce
 from GenerDat.container import ImageMeta
@@ -212,7 +215,7 @@ def main():
     # alphabet = list(gen.char_manager._letters_map)
     # words = [word for word in words if all(c in alphabet for c in word)]
     # words = np.random.choice(words, batch).tolist()
-    words = list(gen.char_manager.get_words_of_length(3))
+    words = list(gen.char_manager.get_equal_words(length, batch))
     n = min(len(words), batch)
     print("start...")
     flush_period = 100
@@ -239,10 +242,10 @@ def main():
 
 
 if __name__ == '__main__':
-    image_path = 'images'
-    json_path = 'final.json'
-    ocr_path = '\0'
-    font_path = "b_nazanin.ttf"
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data10/images')
+    json_path = os.path.join(image_path, "../final.json")
+    ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
+    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
     batch = 10
     length = 5
     is_meaningful = True
