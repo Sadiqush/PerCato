@@ -1,8 +1,12 @@
 import json
 import pprint
+from GenerDat import textutil
+from CleanDat.conv2dete import map_unis
+import re
 
 
-def sum_list(json_path):
+def sum_class(json_path):
+    """Show how much of each letter we have."""
     char_list = {}
     with open(json_path) as f:
         x = json.load(f)
@@ -15,10 +19,59 @@ def sum_list(json_path):
                     char_list[i] = 1
     char_list['sum'] = sum(char_list.values())
     pp.pprint(char_list)
+    return None
+
+
+def sum_list(json_path):
+    """Show total number of classes in the data."""
+    with open(json_path) as f:
+        x = json.load(f)
+        chars = []
+        for block in x:
+            chars.extend(block['parts'])
+    # print(set(chars))
+    print(len(set(chars)))
+    return None
+
+
+def compat_check(newalph):
+    """Check the compatibility of unicodes with the old ALPHABET used."""
+    count = 0
+    for c in textutil.ALPHABET:
+        if c in newalph:
+            count += 1
+    if count == 33:
+        print("It's compatible.")
+    else:
+        print("Only %d are compatible." % count)
+
+
+def fe_check(checkstr):
+    """See all the chars in a list as unicode."""
+    for c in checkstr:
+        res = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), c))
+        print("%s is %s" % (c, res))
+
+
+def map_check(alph, checkdic):
+    """See all the chars in a dictionary as unicode."""
+    for c in alph:
+        mainc = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), c))
+        ans = checkdic[c]
+        res = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), ans))
+        print(c, ' --> ', mainc, " --> ", res)
+    return None
 
 
 if __name__ == "__main__":
     pp = pprint.PrettyPrinter(indent=2)
-    # json_file = '/home/sadegh/Projects/OCR/datasets/medaya/final-pretty.json'
-    json_file = '/home/sadegh/Projects/OCR/datasets/dgen2/v40/final-pretty.json'
-    sum_list(json_file)
+    json_file = '/home/sadegh/Projects/OCR/datasets/data8.1/final.json'
+    new_alph = textutil.TextGen.get_join_alphabet(view=False)
+    org_alph = textutil.ALPHABET
+    # sum_class(json_file)
+    # sum_list(json_file)
+    # compat_check(new_alph)
+    # fe_check(str(new_alph))
+    # map_check(org_alph, map_dic)
+    niga = map_unis(["ص", "ا", "د"])
+    print(niga)
