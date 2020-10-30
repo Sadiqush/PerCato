@@ -46,15 +46,6 @@
             "medial_form": "ﺒ"
         },
         {
-            "character": "ة",
-            "description": "Arabic Letter Teh Marbuta",
-            "unicode": 1577,
-            "initial_form": null,
-            "isolated_form": "ﺓ",
-            "final_form": "ﺔ",
-            "medial_form": null
-        },
-        {
             "character": "ت",
             "description": "Arabic Letter Teh",
             "unicode": 1578,
