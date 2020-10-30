@@ -1,6 +1,6 @@
 import json
 import pprint
-from GenerDat import textutil
+# from GenerDat import textutil
 from CleanDat.conv2dete import map_unis
 import re
 
@@ -65,13 +65,20 @@ def map_check(alph, checkdic):
 
 if __name__ == "__main__":
     pp = pprint.PrettyPrinter(indent=2)
-    json_file = '/home/sadegh/Projects/OCR/datasets/data8.1/final.json'
-    new_alph = textutil.TextGen.get_join_alphabet(view=False)
-    org_alph = textutil.ALPHABET
-    # sum_class(json_file)
-    # sum_list(json_file)
+    json_file = '/home/sadegh/Projects/OCR/datasets/data10/final.json'
+    # new_alph = textutil.TextGen.get_join_alphabet(view=False)
+    # org_alph = textutil.ALPHABET
     # compat_check(new_alph)
     # fe_check(str(new_alph))
     # map_check(org_alph, map_dic)
-    niga = map_unis(["ص", "ا", "د"])
-    print(niga)
+    # niga = map_unis(["ص", "ا", "د"])
+    # print(niga)
+    # red = ['ﺽ', 'ﺹ', 'ﺙ', 'ﻕ', 'ﻑ', 'ﻍ', 'ﻉ', 'ﻩ', 'ﺥ', 'ﺡ', 'ﺝ',
+    #        'ﭺ', 'ﺵ', 'ﺱ', 'ﯼ', 'ﺏ', 'ﻝ', 'ﺕ', 'ﻥ', 'ﻡ', 'ﮎ', 'ﮒ',
+    #        'ﻅ', 'ﻁ', 'ﭖ', 'ﺉ', 'ﺭ', 'ﺯ', 'ﺩ', 'ﺫ', 'ﻭ', 'ﺍ', 'ﺁ',
+    #        'ﺃ', 'لا']
+    # fe_check(red)
+
+    sum_class(json_file)
+    sum_list(json_file)
+
