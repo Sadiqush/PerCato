@@ -209,13 +209,15 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    with open('words.csv', 'r', encoding='utf-8') as file:
-        text = file.read()
-        words = list(text.split('\n'))
-    # alphabet = list(gen.char_manager._letters_map)
-    # words = [word for word in words if all(c in alphabet for c in word)]
-    # words = np.random.choice(words, batch).tolist()
-    words = gen.char_manager.get_equal_words(length, batch)
+    if is_meaningful:
+        with open('words.csv', 'r', encoding='utf-8') as file:
+            text = file.read()
+            words = list(text.split('\n'))
+        alphabet = list(gen.char_manager._letters_map)
+        words = [word for word in words if all(c in alphabet for c in word)]
+        words = np.random.choice(words, batch).tolist()
+    else:
+        words = gen.char_manager.get_equal_words(length, batch)
     n = min(len(words), batch)
     print("start...")
     flush_period = 100
