@@ -31,18 +31,19 @@ class TextGen:
         exceptions: exception words, e.g. لا.
     """
 
-    def __init__(self, font_path, font_size, exceptions: Iterable[str] = None, anti_alias=False):
+    def __init__(self, font_path, font_size, exceptions: Iterable[str] = None, anti_alias=False, reject_unknown=True):
         self.char_manager = CharacterManager()
         self.font = ImageFont.truetype(font_path, size=font_size, encoding='utf-8')
         self._dummy = ImageDraw.Draw(Image.new('L', (0, 0)))
         self.exceptions = set(exceptions) if exceptions else set()
         self.anti_alias = anti_alias
+        self.reject_unknown = reject_unknown
 
     def create_meta_image(self, text):
         """Generates metadata for ImageMeta class to use"""
         image = self.create_image(text)
         boxes = self.get_boxes(image, text)
-        parts = self.get_characters(text)
+        parts = self.get_characters(text, self.reject_unknown)
         # visible_parts = self.get_visible_parts(text)
         meta = ImageMeta(text, image, parts, boxes)
         return meta
@@ -161,9 +162,9 @@ class TextGen:
         """Returns image size of the given text. Font itself is effective on the size."""
         return self._dummy.textsize(text, spacing=0, font=self.font, language='fa_IR', direction="rtl")
 
-    def get_characters(self, text, freeze_letters=True):
+    def get_characters(self, text, freeze_letters=True, reject=True):
         """Gets characters of a text as a list with respect to exceptions."""
-        chars = list(self.char_manager.fix_letters(text, reject_unknown=True)) if freeze_letters else list(text)
+        chars = list(self.char_manager.fix_letters(text, reject)) if freeze_letters else list(text)
         exception_spans = self.find_exceptions(text)
         # print(exception_spans)
         for s, e in exception_spans[::-1]:
@@ -177,7 +178,7 @@ class TextGen:
         if len(text) < 2:
             w, _ = self.get_size(text)
             return [w - 1]
-        chars = self.get_characters(text)
+        chars = self.get_characters(text, self.reject_unknown)
         reduced = []
         n = len(chars)
         for i in range(1, n + 1):
@@ -209,6 +210,8 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
+    if ugly_mode:
+        gen.reject_unknown = False
     if is_meaningful:
         with open('words.csv', 'r', encoding='utf-8') as file:
             text = file.read()
@@ -247,7 +250,7 @@ if __name__ == '__main__':
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 100
+    batch = 500
     length = 5
     is_meaningful = False
     ugly_mode = True
