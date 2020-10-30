@@ -60,6 +60,27 @@ class CharacterManager:
         return self._letters_map.copy() if as_dict else list(self._letters_map)
 
     @staticmethod
+    def get_persian_letters_ugly(view=False):
+        """Create an alphabet that consists of all forms of letters, in ugly way."""
+        letters = ['ﺍ', 'ﺎ', 'ﺏ', 'ﺐ', 'ﺑ', 'ﺒ', 'ﺕ', 'ﺖ', 'ﺗ', 'ﺘ', 'ﺙ',
+                   'ﺚ', 'ﺛ', 'ﺜ', 'ﺝ', 'ﺞ', 'ﺟ', 'ﺠ', 'ﺡ', 'ﺢ', 'ﺣ', 'ﺤ',
+                   'ﺥ', 'ﺦ', 'ﺧ', 'ﺨ', 'ﺩ', 'ﺪ', 'ﺫ', 'ﺬ', 'ﺭ', 'ﺮ', 'ﺯ',
+                   'ﺰ', 'ﺱ', 'ﺲ', 'ﺳ', 'ﺴ', 'ﺵ', 'ﺶ', 'ﺷ', 'ﺸ', 'ﺹ', 'ﺺ',
+                   'ﺻ', 'ﺼ', 'ﺽ', 'ﺾ', 'ﺿ', 'ﻀ', 'ﻁ', 'ﻂ', 'ﻅ', 'ﻆ', 'ﻉ',
+                   'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ', 'ﻑ', 'ﻒ', 'ﻓ', 'ﻔ',
+                   'ﻕ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﮎ', 'ﻚ', 'ﻛ', 'ﻜ', 'ﻝ', 'ﻞ', 'ﻟ',
+                   'ﻠ', 'ﻡ', 'ﻢ', 'ﻣ', 'ﻤ', 'ﻥ', 'ﻦ', 'ﻧ', 'ﻨ', 'ﻩ', 'ﻪ',
+                   'ﻫ', 'ﻬ', 'ﻭ', 'ﻮ', 'ﯼ', 'ﭖ', 'ﭗ', 'ﭘ', 'ﭙ', 'ﭺ', 'ﭻ',
+                   'ﭼ', 'ﭽ', 'ژ', 'ﮋ', 'ﮒ', 'ﮓ', 'ﮔ', 'ﮕ', 'ﺃ', 'ﺋ', 'ﺊ',
+                   'ﺌ', 'ﺉ', 'ﺁ', 'ؤ', 'لا']
+        if view:
+            print("the alphabet is a total of %s:" % len(letters))
+            for i in letters:
+                print(f"{i}\t", end="")
+
+        return letters
+
+    @staticmethod
     def load_persian_letters(json_path):
         with open('letters.json', 'r', encoding="utf-8") as file:
             letters_dict_list = json.load(file)["letters"]
@@ -109,6 +130,10 @@ class CharacterManager:
         # print(words)
 
         return words
+
+    @property
+    def letters_map(self):
+        return self._letters_map
 
 
 if __name__ == '__main__':
