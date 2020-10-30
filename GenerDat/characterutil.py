@@ -1,7 +1,6 @@
 import json
 from enum import IntFlag
-from typing import Union, Dict, Set
-from itertools import product
+from typing import Union, Dict
 import random
 from timeit import timeit
 
