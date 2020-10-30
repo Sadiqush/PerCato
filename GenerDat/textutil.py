@@ -213,11 +213,11 @@ def main():
         with open('words.csv', 'r', encoding='utf-8') as file:
             text = file.read()
             words = list(text.split('\n'))
-        alphabet = list(gen.char_manager._letters_map)
+        alphabet = list(gen.char_manager.letters_map)
         words = [word for word in words if all(c in alphabet for c in word)]
         words = np.random.choice(words, batch).tolist()
     else:
-        words = gen.char_manager.get_equal_words(length, batch)
+        words = gen.char_manager.get_equal_words(length, batch, ugly_mode)
     print("start...")
     flush_period = 100
     with open(json_path, 'w') as file:
@@ -247,7 +247,8 @@ if __name__ == '__main__':
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
-    batch = 10
+    batch = 100
     length = 5
     is_meaningful = False
+    ugly_mode = True
     main()

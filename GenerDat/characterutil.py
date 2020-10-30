@@ -118,9 +118,12 @@ class CharacterManager:
                 flag |= PersianLetterSide.BACK
         return self._letters_map[c].get_connected_form(flag)
 
-    def get_equal_words(self, length: int, batch: int):
+    def get_equal_words(self, length: int, batch: int, ugly=True):
         """Generate random words with equal weight (probability) for letters"""
-        letters = [letter.character for letter in self._letters_map.values()]
+        if ugly:
+            letters = self.get_persian_letters_ugly()
+        else:
+            letters = [letter.character for letter in self._letters_map.values()]
 
         words = []
         random.seed(42)
