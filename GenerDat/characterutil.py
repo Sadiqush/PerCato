@@ -3,7 +3,6 @@ from enum import IntFlag
 from typing import Union, Dict
 import random
 
-
 # from timeit import timeit
 
 
@@ -116,15 +115,16 @@ class CharacterManager:
                 flag |= PersianLetterSide.BACK
         return self._letter_map[c].get_connected_form(flag)
 
-    def get_equal_words(self, length: int, batch: int, ugly=True, seed=None):
+    def get_equal_words(self, length: int, batch: int, occurrence=1, seed=None, ugly=True):
         """Generate random words with equal weight (probability) for letters"""
-        if seed:
-            random.seed(seed)
+        choices = random.Random(seed).choices if seed else random.choices
         letters = self.get_persian_letter_forms() if ugly else self.get_persian_letters()
-        words = list({''.join(random.choices(letters, k=length)) for _ in range(batch)})
+        if 1 < occurrence <= length:
+            letters *= occurrence
+        words = list({''.join(choices(letters, k=length)) for _ in range(batch)})
         return words
 
 
 if __name__ == '__main__':
     cm = CharacterManager()
-    print(cm.get_equal_words(10, 3, ugly=False))
+    print(cm.get_equal_words(10, 3, ugly=False, seed=42))
