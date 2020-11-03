@@ -28,6 +28,15 @@
             "medial_form": "ﺌ"
         },
         {
+            "character": "ؤ",
+            "description": "Arabic Letter Waw with Hamza Above",
+            "unicode": 1572,
+            "initial_form": null,
+            "isolated_form": "ﺅ",
+            "final_form": "ﺆ",
+            "medial_form": null
+        },
+        {
             "character": "ا",
             "description": "Arabic Letter Alef",
             "unicode": 1575,
@@ -124,6 +133,15 @@
             "initial_form": null,
             "isolated_form": "ﺯ",
             "final_form": "ﺰ",
+            "medial_form": null
+        },
+        {
+            "character": "ژ",
+            "description": "Arabic Letter Jeh",
+            "unicode": 1688,
+            "initial_form": null,
+            "isolated_form": "ﮊ",
+            "final_form": "ﮋ",
             "medial_form": null
         },
         {
