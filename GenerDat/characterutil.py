@@ -2,6 +2,7 @@ import json
 from enum import IntFlag
 from typing import Union, Dict
 import random
+from copy import copy, deepcopy
 
 # from timeit import timeit
 
@@ -17,6 +18,13 @@ class Character:
 
     def __repr__(self):
         return str(self.__dict__)
+
+
+class PersianLetterForm(IntFlag):
+    ISOLATED = 0
+    INITIAL = 1
+    FINAL = 2
+    MEDIAL = 3
 
 
 class PersianLetterSide(IntFlag):
@@ -62,9 +70,10 @@ class CharacterManager:
     def __init__(self, json_path: str = "letters.json"):
         self._letter_map: Dict[str, PersianLetter] = self.load_persian_letters(json_path)
         self._letter_forms = None
+        self._form_letter_map = None
 
     def get_persian_letters(self, as_dict=False):
-        return {letter.character: letter.__copy__() for letter in self._letter_map.values()} if as_dict \
+        return {letter.character: copy(letter) for letter in self._letter_map.values()} if as_dict \
             else list(self._letter_map.keys())
 
     def get_persian_letter_forms(self):
@@ -75,7 +84,28 @@ class CharacterManager:
             if None in forms:
                 forms.remove(None)
             self._letter_forms = list(forms)
-        return self._letter_forms.copy()
+        return copy(self._letter_forms)
+
+    def get_form_of_letter(self, c, throw_unknown=False):
+        if self._form_letter_map is None:
+            self.get_form_letter_map()
+        form = next(iter(form for form, letters in self._form_letter_map.items() if c in letters), -1)
+        if form == -1 and throw_unknown:
+            raise Exception(f"Form of '{c}' is not found.")
+        return form
+
+    def get_form_letter_map(self):
+        form = PersianLetterForm
+        if self._form_letter_map is None:
+            flp = {form.ISOLATED: set(), form.INITIAL: set(), form.FINAL: set(), form.MEDIAL: set()}
+            for c in self._letter_map.values():
+                isolated, initial, final, medial = c.isolated_form, c.initial_form, c.final_form, c.medial_form
+                if isolated: flp[form.ISOLATED].add(isolated)
+                if initial: flp[form.INITIAL].add(initial)
+                if final: flp[form.FINAL].add(final)
+                if medial: flp[form.MEDIAL].add(medial)
+            self._form_letter_map = flp
+        return deepcopy(self._form_letter_map)
 
     @staticmethod
     def load_persian_letters(json_path='letters.json'):
@@ -127,4 +157,6 @@ class CharacterManager:
 
 if __name__ == '__main__':
     cm = CharacterManager()
-    print(cm.get_equal_words(10, 3, ugly=False, seed=42))
+    flm = cm.get_form_letter_map()
+    print(flm)
+    print(cm.get_form_of_letter('nigga',throw_unknown=True))
