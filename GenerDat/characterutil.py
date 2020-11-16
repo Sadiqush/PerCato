@@ -79,7 +79,7 @@ class CharacterManager:
     def get_persian_letter_forms(self):
         if self._letter_forms is None:
             forms = set()
-            forms.update(*((v.initial_form, v.medial_form, v.final_form, v.isolated_form)
+            forms.update(*((v.initial_form, v.isolated_form)
                            for v in self._letter_map.values()))
             if None in forms:
                 forms.remove(None)
@@ -148,7 +148,16 @@ class CharacterManager:
     def get_equal_words(self, length: int, batch: int, occurrence=1, seed=None, ugly=True):
         """Generate random words with equal weight (probability) for letters"""
         choices = random.Random(seed).choices if seed else random.choices
-        letters = self.get_persian_letter_forms() if ugly else self.get_persian_letters()
+        # letters = self.get_persian_letter_forms() if ugly else self.get_persian_letters()
+        letters = ['ﺎ', 'ﺐ', 'ﺑ', 'ﺖ', 'ﺗ', 'ﺚ', 'ﺛ', 'ﺞ', 'ﺟ',
+                   'ﺢ', 'ﺣ', 'ﺦ', 'ﺧ', 'ﺪ', 'ﺬ', 'ﺮ', 'ﺰ', 'ﺲ',
+                   'ﺳ', 'ﺶ', 'ﺷ', 'ﺺ', 'ﺻ', 'ﺾ', 'ﺿ', 'ﻂ',
+                   'ﻆ', 'ﻉ', 'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ',
+                   'ﻒ', 'ﻓ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﻚ', 'ﻛ', 'ﻞ',
+                   'ﻟ', 'ﻠ', 'ﻢ', 'ﻣ', 'ﻦ', 'ﻧ', 'ﻩ', 'ﻪ', 'ﻫ',
+                   'ﻬ', 'ﻮ', 'ﯼ', 'ﯾ', 'ﭗ', 'ﭘ', 'ﭻ', 'ﭼ', 'ﮋ',
+                   'ﮓ', 'ﮔ', 'ﺋ', 'ﺁ', 'لا']
+
         if 1 < occurrence <= length:
             letters *= occurrence
         words = list({''.join(choices(letters, k=length)) for _ in range(batch)})
