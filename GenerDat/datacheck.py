@@ -1,8 +1,8 @@
 import json
 import pprint
-# from GenerDat import textutil
-from CleanDat.conv2dete import map_unis
 import re
+
+from GenerDat.textutil import json_path
 
 
 def sum_class(json_path):
@@ -65,7 +65,7 @@ def map_check(alph, checkdic):
 
 if __name__ == "__main__":
     pp = pprint.PrettyPrinter(indent=2)
-    json_file = '/home/sadegh/Projects/OCR/datasets/data10/final.json'
+    # json_path = '/home/sadegh/Projects/OCR/datasets/data10/final.json'
     # new_alph = textutil.TextGen.get_join_alphabet(view=False)
     # org_alph = textutil.ALPHABET
     # compat_check(new_alph)
@@ -79,6 +79,6 @@ if __name__ == "__main__":
     #        'ﺃ', 'لا']
     # fe_check(red)
 
-    sum_class(json_file)
-    sum_list(json_file)
+    sum_class(json_path)
+    sum_list(json_path)
 
