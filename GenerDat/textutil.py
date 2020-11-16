@@ -170,6 +170,7 @@ class TextGen:
         for s, e in exception_spans[::-1]:
             chars[s] = reduce(str.__add__, chars[s:e])
             del chars[s + 1:e]
+        chars.reverse()
         # print(chars)
         return chars
 
@@ -230,7 +231,7 @@ def main():
             # print(word)
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
-            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+            # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
@@ -245,15 +246,15 @@ def main():
     return None
 
 
-image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data10/images')
+image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data11 /images')
 json_path = os.path.join(image_path, "../final.json")
 ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
 font_path = os.path.join(ocr_path, "b_nazanin.ttf")
 
 
 if __name__ == '__main__':
-    batch = 500
+    batch = 10
     length = 5
     is_meaningful = False
-    ugly_mode = False
+    ugly_mode = True
     main()
