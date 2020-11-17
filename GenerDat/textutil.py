@@ -169,7 +169,7 @@ class TextGen:
         for s, e in exception_spans[::-1]:
             chars[s] = reduce(str.__add__, chars[s:e])
             del chars[s + 1:e]
-        # chars.reverse()
+        chars.reverse()
         # print(chars)
         return chars
 
