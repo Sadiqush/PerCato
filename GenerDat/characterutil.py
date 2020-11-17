@@ -4,6 +4,7 @@ from typing import Union, Dict
 import random
 from copy import copy, deepcopy
 
+
 # from timeit import timeit
 
 
@@ -79,7 +80,7 @@ class CharacterManager:
     def get_persian_letter_forms(self):
         if self._letter_forms is None:
             forms = set()
-            forms.update(*((v.initial_form, v.isolated_form)
+            forms.update(*((v.initial_form, v.medial_form, v.final_form, v.isolated_form)
                            for v in self._letter_map.values()))
             if None in forms:
                 forms.remove(None)
@@ -118,15 +119,15 @@ class CharacterManager:
             letters[letter.character] = letter
         return letters
 
-    def fix_letters(self, string: str, throw_unknown=False):
-        fixed = []
+    def freeze_letters(self, string: str, throw_unknown=False):
+        frozen_letters = []
         for i, c in enumerate(string):
             if c in self._letter_map:
                 c = self.get_letter_form(string, i)
             elif throw_unknown:
                 raise Exception(f"Unknown letter '{c}' in \"{string}\".")
-            fixed.append(c)
-        return "".join(fixed)
+            frozen_letters.append(c)
+        return "".join(frozen_letters)
 
     def get_letter_form(self, string: str, index: int) -> str:
         flag = 0
@@ -145,19 +146,18 @@ class CharacterManager:
                 flag |= PersianLetterSide.BACK
         return self._letter_map[c].get_connected_form(flag)
 
-    def get_equal_words(self, length: int, batch: int, occurrence=1, seed=None, ugly=True):
+    def get_equal_words(self, length: int, batch: int, occurrence=1, seed=None, ugly=False):
         """Generate random words with equal weight (probability) for letters"""
         choices = random.Random(seed).choices if seed else random.choices
-        # letters = self.get_persian_letter_forms() if ugly else self.get_persian_letters()
-        letters = ['ﺎ', 'ﺐ', 'ﺑ', 'ﺖ', 'ﺗ', 'ﺚ', 'ﺛ', 'ﺞ', 'ﺟ',
-                   'ﺢ', 'ﺣ', 'ﺦ', 'ﺧ', 'ﺪ', 'ﺬ', 'ﺮ', 'ﺰ', 'ﺲ',
-                   'ﺳ', 'ﺶ', 'ﺷ', 'ﺺ', 'ﺻ', 'ﺾ', 'ﺿ', 'ﻂ',
-                   'ﻆ', 'ﻉ', 'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ',
-                   'ﻒ', 'ﻓ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﻚ', 'ﻛ', 'ﻞ',
-                   'ﻟ', 'ﻠ', 'ﻢ', 'ﻣ', 'ﻦ', 'ﻧ', 'ﻩ', 'ﻪ', 'ﻫ',
-                   'ﻬ', 'ﻮ', 'ﯼ', 'ﯾ', 'ﭗ', 'ﭘ', 'ﭻ', 'ﭼ', 'ﮋ',
-                   'ﮓ', 'ﮔ', 'ﺋ', 'ﺁ', 'لا']
-
+        sadiq_letters = ['ﺎ', 'ﺐ', 'ﺑ', 'ﺖ', 'ﺗ', 'ﺚ', 'ﺛ', 'ﺞ', 'ﺟ',
+                         'ﺢ', 'ﺣ', 'ﺦ', 'ﺧ', 'ﺪ', 'ﺬ', 'ﺮ', 'ﺰ', 'ﺲ',
+                         'ﺳ', 'ﺶ', 'ﺷ', 'ﺺ', 'ﺻ', 'ﺾ', 'ﺿ', 'ﻂ',
+                         'ﻆ', 'ﻉ', 'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ',
+                         'ﻒ', 'ﻓ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﻚ', 'ﻛ', 'ﻞ',
+                         'ﻟ', 'ﻠ', 'ﻢ', 'ﻣ', 'ﻦ', 'ﻧ', 'ﻩ', 'ﻪ', 'ﻫ',
+                         'ﻬ', 'ﻮ', 'ﯼ', 'ﯾ', 'ﭗ', 'ﭘ', 'ﭻ', 'ﭼ', 'ﮋ',
+                         'ﮓ', 'ﮔ', 'ﺋ', 'ﺁ', 'لا']
+        letters = sadiq_letters if ugly else self.get_persian_letters()
         if 1 < occurrence <= length:
             letters *= occurrence
         words = list({''.join(choices(letters, k=length)) for _ in range(batch)})
@@ -168,4 +168,4 @@ if __name__ == '__main__':
     cm = CharacterManager()
     flm = cm.get_form_letter_map()
     print(flm)
-    print(cm.get_form_of_letter('nigga',throw_unknown=True))
+    print(cm.get_form_of_letter('nigga', throw_unknown=True))

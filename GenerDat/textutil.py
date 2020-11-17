@@ -164,13 +164,12 @@ class TextGen:
 
     def get_characters(self, text, freeze_letters=True, reject=True):
         """Gets characters of a text as a list with respect to exceptions."""
-        chars = list(self.char_manager.fix_letters(text, reject)) if freeze_letters else list(text)
+        chars = list(self.char_manager.freeze_letters(text, reject)) if freeze_letters else list(text)
         exception_spans = self.find_exceptions(text)
         # print(exception_spans)
         for s, e in exception_spans[::-1]:
             chars[s] = reduce(str.__add__, chars[s:e])
             del chars[s + 1:e]
-        chars.reverse()
         # print(chars)
         return chars
 
@@ -179,7 +178,7 @@ class TextGen:
         if len(text) < 2:
             w, _ = self.get_size(text)
             return [w - 1]
-        chars = self.get_characters(text, self.reject_unknown)
+        chars = self.get_characters(text, self.reject_unknown ,self.reject_unknown)
         reduced = []
         n = len(chars)
         for i in range(1, n + 1):
@@ -211,17 +210,18 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
-    if ugly_mode:
-        gen.reject_unknown = False
+    gen.reject_unknown = True
     if is_meaningful:
         with open('words.csv', 'r', encoding='utf-8') as file:
             text = file.read()
             words = list(text.split('\n'))
-        alphabet = list(gen.char_manager.letters_map)
+        alphabet = gen.char_manager.get_persian_letters()
         words = [word for word in words if all(c in alphabet for c in word)]
         words = np.random.choice(words, batch).tolist()
+        print(words)
     else:
-        words = gen.char_manager.get_equal_words(length, batch, ugly_mode)
+        gen.reject_unknown = not ugly_mode
+        words = gen.char_manager.get_equal_words(length, batch, ugly=ugly_mode)
     print("start...")
     flush_period = 100
     with open(json_path, 'w') as file:
@@ -231,7 +231,7 @@ def main():
             # print(word)
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
-            # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
@@ -246,15 +246,16 @@ def main():
     return None
 
 
-image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data11 /images')
-json_path = os.path.join(image_path, "../final.json")
-ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
-font_path = os.path.join(ocr_path, "b_nazanin.ttf")
+image_path = os.path.join('images/')
+json_path = os.path.join("final.json")
+ocr_path = os.path.join('PycharmProjects/ocrdg/GenerDat/')
+font_path = os.path.join("b_nazanin.ttf")
 
 
 if __name__ == '__main__':
-    batch = 10
+    batch = 500
     length = 5
-    is_meaningful = False
-    ugly_mode = True
+    is_meaningful = True
+    ugly_mode = False
+    assert is_meaningful != ugly_mode, "is_meaningful can't be same with uglymode"
     main()
