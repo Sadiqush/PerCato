@@ -11,13 +11,12 @@ from GenerDat.characterutil import *
 from functools import reduce
 from GenerDat.container import ImageMeta
 
-# JOINER = u'\u200d'
-# NON_JOINER = u'\u200c'
-# JOINABLE_LETTERS = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
-# NON_JOINABLE_LETTERS = "رزدذواآأ"
-# ALPHABET = JOINABLE_LETTERS + NON_JOINABLE_LETTERS
-# SYMBOLS = r"|{}[]؛:«»؟<>ء\/.=-+()*،×٪٫٬!"
-# NUMBERS = "۰۱۲۳۴۵۶۷۸۹"
+NON_JOINER = u'\u200c'
+JOINABLE_LETTERS = "ضصثقفغعهخحجچشسیبلتنمکگظطپئ"
+NON_JOINABLE_LETTERS = "رزدذواآأ"
+ALPHABET = JOINABLE_LETTERS + NON_JOINABLE_LETTERS
+SYMBOLS = r"|{}[]؛:«»؟<>ء\/.=-+()*،×٪٫٬!"
+NUMBERS = "۰۱۲۳۴۵۶۷۸۹"
 # VOWEL_SYMBOLS = [chr(i) for i in (1611, 1612, 1613, 1614, 1615, 1616, 1617, 1618, 1619, 1620, 1648)]
 
 
@@ -162,7 +161,7 @@ class TextGen:
         """Returns image size of the given text. Font itself is effective on the size."""
         return self._dummy.textsize(text, spacing=0, font=self.font, language='fa_IR', direction="rtl")
 
-    def get_characters(self, text, freeze_letters=True, reject=True):
+    def get_characters(self, text, freeze_letters=True, reject=False):
         """Gets characters of a text as a list with respect to exceptions."""
         chars = list(self.char_manager.fix_letters(text, reject)) if freeze_letters else list(text)
         exception_spans = self.find_exceptions(text)
@@ -179,11 +178,21 @@ class TextGen:
         if len(text) < 2:
             w, _ = self.get_size(text)
             return [w - 1]
-        chars = self.get_characters(text, self.reject_unknown)
         reduced = []
-        n = len(chars)
-        for i in range(1, n + 1):
-            reduced.append("".join(chars[:i]))
+        if is_meaningful:
+            joiner = u'\u200d'
+            n = len(text)
+            for i in range(1, n + 1):
+                s = text[:i]
+                if self.is_joined(s, text[i:]):
+                    # If we have dynamic chars in middle of text, it will keep them as joined.
+                    s += joiner
+                reduced.append("".join(s))
+        else:
+            chars = self.get_characters(text, self.reject_unknown)
+            n = len(chars)
+            for i in range(1, n + 1):
+                reduced.append("".join(chars[:i]))
         reduced.reverse()
         # print(reduced)
         width, _ = self.get_size(text)
@@ -193,6 +202,22 @@ class TextGen:
             widths.append(width + 1 - w)
         widths.append(width - 1)
         return widths
+
+    @staticmethod
+    def is_joined(str0, str1):
+        """Checks if two string are joinable. returns bool."""
+        if str0:
+            c0 = str0[-1]
+        else:
+            return False
+        if str1:
+            c1 = str1[0]
+        else:
+            return False
+        if c0 in JOINABLE_LETTERS and c1 not in SYMBOLS + NUMBERS:
+            return True
+        else:
+            return False
 
     def find_exceptions(self, text) -> List[Tuple[int, int]]:
         if not self.exceptions:
@@ -217,7 +242,8 @@ def main():
         with open('words.csv', 'r', encoding='utf-8') as file:
             text = file.read()
             words = list(text.split('\n'))
-        alphabet = list(gen.char_manager.letters_map)
+        # alphabet = list(gen.char_manager._letter_map)
+        alphabet = ALPHABET
         words = [word for word in words if all(c in alphabet for c in word)]
         words = np.random.choice(words, batch).tolist()
     else:
@@ -231,7 +257,7 @@ def main():
             # print(word)
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
-            # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
             if i == 0:
@@ -246,7 +272,7 @@ def main():
     return None
 
 
-image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data11 /images')
+image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data12/images')
 json_path = os.path.join(image_path, "../final.json")
 ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
 font_path = os.path.join(ocr_path, "b_nazanin.ttf")
@@ -256,5 +282,5 @@ if __name__ == '__main__':
     batch = 10
     length = 5
     is_meaningful = False
-    ugly_mode = True
+    ugly_mode = False
     main()
