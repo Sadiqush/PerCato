@@ -267,5 +267,5 @@ if __name__ == '__main__':
     length = 5
     is_meaningful = False
     ugly_mode = True
-    assert is_meaningful != ugly_mode, "is_meaningful can't be same with uglymode"
+    # assert (is_meaningful and ugly_mode), "is_meaningful can't be same with uglymode"
     main()
