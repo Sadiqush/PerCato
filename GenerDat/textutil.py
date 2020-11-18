@@ -231,6 +231,7 @@ def main():
             # print(word)
             meta = gen.create_meta_image(word)
             meta.save_image(f"{image_path}/image{meta.id}.png")
+            # TODO: argument no meta
             meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
             print(f"{meta.id}) {word}")
             js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
@@ -250,7 +251,7 @@ im_sadegh = 1
 im_armin = 0
 
 if im_sadegh:
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data12/images')
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data12-2/images')
     json_path = os.path.join(image_path, "../final.json")
     ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
     font_path = os.path.join(ocr_path, "b_nazanin.ttf")
