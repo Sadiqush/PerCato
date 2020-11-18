@@ -246,16 +246,26 @@ def main():
     return None
 
 
-image_path = os.path.join('images/')
-json_path = os.path.join("final.json")
-ocr_path = os.path.join('PycharmProjects/ocrdg/GenerDat/')
-font_path = os.path.join("b_nazanin.ttf")
+im_sadegh = 1
+im_armin = 0
+
+if im_sadegh:
+    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data12/images')
+    json_path = os.path.join(image_path, "../final.json")
+    ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
+    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
+
+if im_armin:
+    image_path = os.path.join('images/')
+    json_path = os.path.join("final.json")
+    ocr_path = os.path.join('PycharmProjects/ocrdg/GenerDat/')
+    font_path = os.path.join("b_nazanin.ttf")
 
 
 if __name__ == '__main__':
-    batch = 500
+    batch = 10
     length = 5
-    is_meaningful = True
-    ugly_mode = False
+    is_meaningful = False
+    ugly_mode = True
     assert is_meaningful != ugly_mode, "is_meaningful can't be same with uglymode"
     main()
