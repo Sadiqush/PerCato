@@ -1,15 +1,14 @@
-import pathlib
+from pathlib import Path
 from typing import List, Tuple, Iterable
 from re import finditer
 import os
-
 import numpy as np
-from skimage.measure import label
+import cv2
 from PIL import Image, ImageDraw, ImageFont
-
 from GenerDat.characterutil import *
 from functools import reduce
 from GenerDat.container import ImageMeta
+
 
 # JOINER = u'\u200d'
 # NON_JOINER = u'\u200c'
@@ -43,6 +42,9 @@ class TextGen:
         """Generates metadata for ImageMeta class to use"""
         image = self.create_image(text)
         boxes = self.get_boxes(image, text)
+        # for i, box in enumerate(boxes):
+        #     mask = get_mask(image.transpose(), *box)
+        #     cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
         parts = self.get_characters(text, self.reject_unknown)
         # visible_parts = self.get_visible_parts(text)
         meta = ImageMeta(text, image, parts, boxes)
@@ -71,28 +73,27 @@ class TextGen:
         bad_pixels = set()
         x0, x1 = 0, 0
         y0, y1 = 0, 0
+        _, labels = cv2.connectedComponents(image)
 
         def check_pixel(image, x0, x1, y0, y1, i, j):
             good = False
-            img_pixels = self.get_connected_pixels(image, i, j)
-            # img_pixels = image
-            seg_pixels = [pixel for pixel in img_pixels if x0 <= pixel[0] <= x1 and y0 <= pixel[1] <= y1]
-            # if (np.sum(seg_pixels) > 0) < 4:
-            #     good = False
-            #     return good, seg_pixels
+            img_pixels = list(zip(*np.where(labels == labels[i, j])))
+            seg_pixels = list(zip(*np.where(labels[x0:x1 + 1, y0:y1 + 1] == labels[i, j])))
+            comp_n, seg_labels = cv2.connectedComponents(get_mask(image, x0, y0, x1, y1))
+            seg_parts_pixels = [list(zip(*np.where(seg_labels == i))) for i in range(comp_n)]
+            smol_pixels = next(ez for ez in seg_parts_pixels if (i, j) in ez)
             ns, ni = len(seg_pixels), len(img_pixels)
-            xs = []
-            ys = []
-            for pixel in seg_pixels:
-                xs.append(pixel[0])
-                ys.append(pixel[1])
+            xs, ys = zip(*seg_pixels)
             shape = (max(xs) + 1 - min(xs), max(ys) + 1 - min(ys))
-            if ns + 2 >= ni:
+            xs, ys = zip(*smol_pixels)
+            smol_shape = (max(xs) + 1 - min(xs), max(ys) + 1 - min(ys))
+            if ni - ns < 3:
                 good = True
-            elif shape[0] < 2 or shape[1] < 2:
-                good = False
+            #elif len(smol_pixels) < 4 or smol_shape < (4, 4) or shape < (4, 4):
+            #    good = False
             elif ns / (ns + ni) > 0.1 or ns > 15:
                 good = True
+            #seg_pixels = smol_pixels
             return good, seg_pixels
 
         def complex_condition(x=-1, y=-1):
@@ -153,11 +154,6 @@ class TextGen:
             label_pixels.append((text[pos], []))
         return label_pixels
 
-    def get_connected_pixels(self, image: np.ndarray, i, j):
-        labels: np.ndarray = label(image > 0)
-        coords = np.where(labels == labels[i, j])
-        return list(zip(*coords))
-
     def get_size(self, text) -> Tuple[int, int]:
         """Returns image size of the given text. Font itself is effective on the size."""
         return self._dummy.textsize(text, spacing=0, font=self.font, language='fa_IR', direction="rtl")
@@ -178,7 +174,7 @@ class TextGen:
         if len(text) < 2:
             w, _ = self.get_size(text)
             return [w - 1]
-        chars = self.get_characters(text, self.reject_unknown ,self.reject_unknown)
+        chars = self.get_characters(text, self.reject_unknown, self.reject_unknown)
         reduced = []
         n = len(chars)
         for i in range(1, n + 1):
@@ -209,7 +205,7 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
 
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
-    pathlib.Path(image_path).mkdir(parents=True, exist_ok=True)
+    Path(image_path).mkdir(parents=True, exist_ok=True)
     gen.reject_unknown = True
     if is_meaningful:
         with open('words.csv', 'r', encoding='utf-8') as file:
@@ -224,6 +220,8 @@ def main():
         words = gen.char_manager.get_equal_words(length, batch, ugly=ugly_mode)
     print("start...")
     flush_period = 100
+    words[0] = 'آرمین'
+    words[1] = 'صادق'
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
         for i in range(batch):
@@ -247,26 +245,24 @@ def main():
     return None
 
 
-im_sadegh = 1
-im_armin = 0
+im_sadegh = 0
+im_armin = 1
 
 if im_sadegh:
-    image_path = os.path.join(pathlib.Path.home(), 'Projects/OCR/datasets/data12-2/images')
-    json_path = os.path.join(image_path, "../final.json")
-    ocr_path = os.path.join(pathlib.Path.home(), 'PycharmProjects/ocrdg/GenerDat/')
-    font_path = os.path.join(ocr_path, "b_nazanin.ttf")
+    image_path = Path.home() / "Projects/OCR/datasets/data12-2/images"
+    json_path = image_path.parent / "final.json"
+    ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
+    font_path = ocr_path / "b_nazanin.ttf"
 
 if im_armin:
-    image_path = os.path.join('images/')
-    json_path = os.path.join("final.json")
-    ocr_path = os.path.join('PycharmProjects/ocrdg/GenerDat/')
-    font_path = os.path.join("b_nazanin.ttf")
-
+    image_path = "images/"
+    json_path = "final.json"
+    font_path = "b_nazanin.ttf"
 
 if __name__ == '__main__':
     batch = 10
     length = 5
     is_meaningful = False
-    ugly_mode = True
+    ugly_mode = False
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
     main()
