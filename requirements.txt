@@ -1,3 +1,6 @@
-numpy
+numpy==1.19.3; sys_platform=='win32'
+numpy; sys_platform!='win32'
 pillow
-scikit-image
+opencv-python
+imagecorruptions
+imgaug
