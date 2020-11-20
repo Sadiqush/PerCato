@@ -90,6 +90,7 @@ class CharacterManager:
     def get_form_of_letter(self, c, throw_unknown=False):
         if self._form_letter_map is None:
             self.get_form_letter_map()
+        assert len(c) == 1, f"'{c}' is not a character"
         form = next(iter(form for form, letters in self._form_letter_map.items() if c in letters), -1)
         if form == -1 and throw_unknown:
             raise Exception(f"Form of '{c}' is not found.")
@@ -168,4 +169,4 @@ if __name__ == '__main__':
     cm = CharacterManager()
     flm = cm.get_form_letter_map()
     print(flm)
-    print(cm.get_form_of_letter('nigga', throw_unknown=True))
+    print(cm.get_form_of_letter('n', throw_unknown=True))
