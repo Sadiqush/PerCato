@@ -127,6 +127,15 @@
             "medial_form": null
         },
         {
+            "character": "ژ",
+            "description": "Arabic Letter Jeh",
+            "unicode": 1688,
+            "initial_form": null,
+            "isolated_form": "ﮊ",
+            "final_form": "ﮋ",
+            "medial_form": null
+        },
+        {
             "character": "س",
             "description": "Arabic Letter Seen",
             "unicode": 1587,
@@ -305,6 +314,15 @@
             "isolated_form": "ﯼ",
             "final_form": "ﯽ",
             "medial_form": "ﯿ"
+        },
+        {
+            "character": "ئ",
+            "description": "Arabic Letter Yeh with Hamza Above",
+            "unicode": 1740,
+            "initial_form": "ﺋ",
+            "isolated_form": "ﺉ",
+            "final_form": "ﺊ",
+            "medial_form": "ﺌ"
         }
     ]
 }
