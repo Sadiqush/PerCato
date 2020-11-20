@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import List, Tuple, Iterable
 from re import finditer
-import os
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont
@@ -52,12 +51,12 @@ class TextGen:
 
     def create_image(self, text):
         """Generates image by given font and text"""
-        size = self.get_size(text)
+        size = tuple(np.add(self.get_size(text), (0, 20)))
         image = Image.new('L', size, color='black')
         if self.anti_alias:
             image = image.resize(image.size, resample=Image.ANTIALIAS)
         d = ImageDraw.Draw(image)
-        d.text((0, 0), text, "white", spacing=0, font=self.font, direction='rtl', language='fa-IR')
+        d.text((0, 10), text, "white", font=self.font, direction='rtl', language='fa-IR')
         return np.array(image)
 
     def get_boxes(self, image: np.ndarray, text):
@@ -73,15 +72,20 @@ class TextGen:
         bad_pixels = set()
         x0, x1 = 0, 0
         y0, y1 = 0, 0
-        _, labels = cv2.connectedComponents(image)
-
+        label_n, labels = cv2.connectedComponents(image)
+        comps_pixels = [list(zip(*np.where(labels == i))) for i in range(label_n)]
+        box_pixels_cache = {}
         def check_pixel(image, x0, x1, y0, y1, i, j):
             good = False
-            img_pixels = list(zip(*np.where(labels == labels[i, j])))
-            seg_pixels = list(zip(*np.where(labels[x0:x1 + 1, y0:y1 + 1] == labels[i, j])))
-            comp_n, seg_labels = cv2.connectedComponents(get_mask(image, x0, y0, x1, y1))
-            seg_parts_pixels = [list(zip(*np.where(seg_labels == i))) for i in range(comp_n)]
-            smol_pixels = next(ez for ez in seg_parts_pixels if (i, j) in ez)
+            img_pixels = next(pixels for pixels in comps_pixels if (i, j) in pixels)
+            # seg_pixels = list(zip(*np.where(labels[x0:x1 + 1, y0:y1 + 1] == labels[i, j])))
+            seg_pixels = [tup for tup in img_pixels if x0 <= tup[0] <= x1 and y0 <= tup[1] <= y1]
+            box = (x0, y0, x1, y1)
+            if box not in box_pixels_cache:
+                comp_n, seg_labels = cv2.connectedComponents(get_mask(image, x0, y0, x1, y1))
+                box_pixels_cache[box] = [list(zip(*np.where(seg_labels == i))) for i in range(comp_n)]
+            seg_parts_pixels = box_pixels_cache[box]
+            smol_pixels = next(pixels for pixels in seg_parts_pixels if (i, j) in pixels)
             ns, ni = len(seg_pixels), len(img_pixels)
             xs, ys = zip(*seg_pixels)
             shape = (max(xs) + 1 - min(xs), max(ys) + 1 - min(ys))
@@ -89,12 +93,11 @@ class TextGen:
             smol_shape = (max(xs) + 1 - min(xs), max(ys) + 1 - min(ys))
             if ni - ns < 3:
                 good = True
-            #elif len(smol_pixels) < 4 or smol_shape < (4, 4) or shape < (4, 4):
-            #    good = False
+            elif len(smol_pixels) < 4 or smol_shape < (4, 4) or shape < (4, 4):
+                good = False
             elif ns / (ns + ni) > 0.1 or ns > 15:
                 good = True
-            #seg_pixels = smol_pixels
-            return good, seg_pixels
+            return good, smol_pixels
 
         def complex_condition(x=-1, y=-1):
             pixels = set()
@@ -221,7 +224,7 @@ def main():
     print("start...")
     flush_period = 100
     words[0] = 'آرمین'
-    words[1] = 'صادق'
+    words[1] = 'حیصأط'
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
         for i in range(batch):
@@ -260,7 +263,7 @@ if im_armin:
     font_path = "b_nazanin.ttf"
 
 if __name__ == '__main__':
-    batch = 10
+    batch = 50
     length = 5
     is_meaningful = False
     ugly_mode = False
