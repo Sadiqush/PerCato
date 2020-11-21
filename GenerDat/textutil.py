@@ -51,7 +51,7 @@ class TextGen:
 
     def create_image(self, text):
         """Generates image by given font and text"""
-        size = tuple(np.add(self.get_size(text), (0, 20)))
+        size = tuple(np.add(self.get_size(text), (4, 20)))
         image = Image.new('L', size, color='black')
         if self.anti_alias:
             image = image.resize(image.size, resample=Image.ANTIALIAS)
@@ -248,20 +248,20 @@ def main():
 
 
 if __name__ == '__main__':
-    batch = 50
+    batch = 10
     length = 5
     im_sadegh = 0
     if im_sadegh:
         image_path = Path.home() / "Projects/OCR/datasets/data12-2/images"
-        json_path = (image_path.parent / "final.json").absolute()
-        image_path = image_path.absolute()
+        json_path = str((image_path.parent / "final.json").absolute())
+        image_path = str(image_path.absolute())
         ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
-        font_path = (ocr_path / "b_nazanin.ttf").absolute()
+        font_path = str((ocr_path / "b_nazanin.ttf").absolute())
     else:
         image_path = "images/"
         json_path = "final.json"
         font_path = "b_nazanin.ttf"
     is_meaningful = False
-    ugly_mode = True
+    ugly_mode = False
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
     main()
