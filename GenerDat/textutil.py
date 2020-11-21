@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import List, Tuple, Iterable
 from re import finditer
+from functools import reduce
+
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont
+
 from GenerDat.characterutil import *
-from functools import reduce
 from GenerDat.container import ImageMeta
 
 
