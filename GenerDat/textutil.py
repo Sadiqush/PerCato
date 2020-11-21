@@ -224,8 +224,6 @@ def main():
         words = gen.char_manager.get_equal_words(length, batch, ugly=ugly_mode)
     print("start...")
     flush_period = 100
-    words[0] = 'آرمین'
-    words[1] = 'حیصأط'
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
         for i in range(batch):
@@ -252,17 +250,18 @@ def main():
 if __name__ == '__main__':
     batch = 50
     length = 5
-    im_sadegh = 1
+    im_sadegh = 0
     if im_sadegh:
         image_path = Path.home() / "Projects/OCR/datasets/data12-2/images"
-        json_path = image_path.parent / "final.json"
+        json_path = (image_path.parent / "final.json").absolute()
+        image_path = image_path.absolute()
         ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
-        font_path = ocr_path / "b_nazanin.ttf"
+        font_path = (ocr_path / "b_nazanin.ttf").absolute()
     else:
         image_path = "images/"
         json_path = "final.json"
         font_path = "b_nazanin.ttf"
     is_meaningful = False
-    ugly_mode = False
+    ugly_mode = True
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
     main()
