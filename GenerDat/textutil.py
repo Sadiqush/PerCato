@@ -75,6 +75,7 @@ class TextGen:
         label_n, labels = cv2.connectedComponents(image)
         comps_pixels = [list(zip(*np.where(labels == i))) for i in range(label_n)]
         box_pixels_cache = {}
+
         def check_pixel(image, x0, x1, y0, y1, i, j):
             good = False
             img_pixels = next(pixels for pixels in comps_pixels if (i, j) in pixels)
@@ -248,23 +249,19 @@ def main():
     return None
 
 
-im_sadegh = 0
-im_armin = 1
-
-if im_sadegh:
-    image_path = Path.home() / "Projects/OCR/datasets/data12-2/images"
-    json_path = image_path.parent / "final.json"
-    ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
-    font_path = ocr_path / "b_nazanin.ttf"
-
-if im_armin:
-    image_path = "images/"
-    json_path = "final.json"
-    font_path = "b_nazanin.ttf"
-
 if __name__ == '__main__':
     batch = 50
     length = 5
+    im_sadegh = 1
+    if im_sadegh:
+        image_path = Path.home() / "Projects/OCR/datasets/data12-2/images"
+        json_path = image_path.parent / "final.json"
+        ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
+        font_path = ocr_path / "b_nazanin.ttf"
+    else:
+        image_path = "images/"
+        json_path = "final.json"
+        font_path = "b_nazanin.ttf"
     is_meaningful = False
     ugly_mode = False
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
