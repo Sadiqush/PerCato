@@ -247,20 +247,21 @@ def main():
     return None
 
 
+im_sadiqu = 0
+if im_sadiqu:
+    image_path = Path.home() / "Projects/OCR/datasets/data13/images"
+    json_path = str((image_path.parent / "final.json").absolute())
+    image_path = str(image_path.absolute())
+    ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
+    font_path = str((ocr_path / "b_nazanin.ttf").absolute())
+else:
+    image_path = "images/"
+    json_path = "final.json"
+    font_path = "b_nazanin.ttf"
+
 if __name__ == '__main__':
     batch = 10
     length = 5
-    im_sadegh = 0
-    if im_sadegh:
-        image_path = Path.home() / "Projects/OCR/datasets/data12-2/images"
-        json_path = str((image_path.parent / "final.json").absolute())
-        image_path = str(image_path.absolute())
-        ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
-        font_path = str((ocr_path / "b_nazanin.ttf").absolute())
-    else:
-        image_path = "images/"
-        json_path = "final.json"
-        font_path = "b_nazanin.ttf"
     is_meaningful = False
     ugly_mode = False
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
