@@ -1,14 +1,13 @@
-from pathlib import Path
-from typing import List, Tuple, Iterable
-from re import finditer
 from functools import reduce
+from pathlib import Path
+from re import finditer
+from typing import List, Tuple, Iterable
 
-import numpy as np
 import cv2
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont
 
 from GenerDat.characterutil import *
-from GenerDat.container import ImageMeta
+from GenerDat.container import *
 
 
 # JOINER = u'\u200d'
@@ -70,8 +69,6 @@ class TextGen:
         # ux0, ux1 = x0, x1
         rectangles = []
         n = len(widths)
-        good_pixels = set()
-        bad_pixels = set()
         x0, x1 = 0, 0
         y0, y1 = 0, 0
         label_n, labels = cv2.connectedComponents(image)
@@ -132,6 +129,8 @@ class TextGen:
             # x1i += 1
             # if x1i == 3:
             #     print("here")
+            good_pixels = set()
+            bad_pixels = set()
             if np.sum(image[x0:x1] > 0) < 4:
                 raise Exception("Given space is empty: {}:{}.".format(x0, x1))
             while complex_condition(x=x0):
@@ -228,25 +227,43 @@ def main():
     flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
-        for i in range(batch):
-            word = words[i]
-            # print(word)
-            meta = gen.create_meta_image(word)
-            meta.save_image(f"{image_path}/image{meta.id}.png")
-            # TODO: argument no meta
-            meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
-            print(f"{meta.id}) {word}")
-            js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
-            if i == 0:
-                js = "[{}".format(js)
-            elif i == batch - 1:
-                js = ",\n{}]".format(js)
-            else:
-                if i % flush_period == 0:
-                    file.flush()
-                js = ",\n{}".format(js)
-            file.write(js)
-    return None
+        if save_with_detectorn_format:
+            for i in range(batch):
+                word = words[i]
+                # print(word)
+                meta = gen.create_meta_image(word)
+                meta = DetectronMeta.from_imagemeta(meta, image_path)
+                print(f"{meta.id}) {word}")
+                js = json.dumps(meta.to_dict())
+                if i == 0:
+                    js = "[{}".format(js)
+                elif i == batch - 1:
+                    js = ",\n{}]".format(js)
+                else:
+                    if i % flush_period == 0:
+                        file.flush()
+                    js = ",\n{}".format(js)
+                file.write(js)
+        else:
+            for i in range(batch):
+                word = words[i]
+                # print(word)
+                meta = gen.create_meta_image(word)
+                meta.save_image(f"{image_path}/image{meta.id}.png")
+                # TODO: argument no meta
+                meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+                print(f"{meta.id}) {word}")
+                js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
+                if i == 0:
+                    js = "[{}".format(js)
+                elif i == batch - 1:
+                    js = ",\n{}]".format(js)
+                else:
+                    if i % flush_period == 0:
+                        file.flush()
+                    js = ",\n{}".format(js)
+                file.write(js)
+        return None
 
 
 im_sadiqu = 0
@@ -262,9 +279,10 @@ else:
     font_path = "b_nazanin.ttf"
 
 if __name__ == '__main__':
-    batch = 10
-    length = 5
+    batch = 20
+    length = 3
     is_meaningful = False
     ugly_mode = False
+    save_with_detectorn_format = True
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
     main()
