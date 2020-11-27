@@ -1,0 +1,22 @@
+[ { file_name: xxx,
+    height: xx,
+    width: xx,
+    image_id: x,
+    annotations: [ {bbox: [xx, yy, xx, yy],
+                    bbox_mode: x
+                    category_id: x
+                    segmentation:[ [xx, yy, ..., xx, yy],
+                                   [xx, yy, ..., xx, yy],
+                                   ...] ]
+                    keypoints: [xx, yy, vv, ..., xx, yy, vv]
+                    iscrowd: 0/1 },
+
+                    { second instance in image },
+                    {...}
+                 ],
+    sem_seg_file_name: xxx },
+
+  { Second image },
+  {...}
+]
+
