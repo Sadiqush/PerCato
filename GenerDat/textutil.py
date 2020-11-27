@@ -227,7 +227,7 @@ def main():
     flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
-        if save_with_detectorn_format:
+        if save_with_detectron_format:
             for i in range(batch):
                 word = words[i]
                 # print(word)
@@ -283,6 +283,6 @@ if __name__ == '__main__':
     length = 3
     is_meaningful = False
     ugly_mode = False
-    save_with_detectorn_format = True
+    save_with_detectron_format = True
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
     main()
