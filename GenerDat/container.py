@@ -1,6 +1,5 @@
-from PIL import ImageColor, Image
 import numpy as np
-
+from PIL import ImageColor, Image
 
 class ImageMeta:
     """
@@ -75,3 +74,37 @@ class ImageMeta:
         json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts.reverse(),
                     "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return json_dic
+
+
+class DetectronMeta(ImageMeta):
+
+    def __init__(self, text, image: np.array, parts, boxes, image_dir, save_image=True, save_labeled_image=True, id=-1):
+        super().__init__(text, image, parts, boxes, id)
+        if save_image:
+            self.file_name = f"{image_dir}/image{self.id}.png"
+            self.save_image(self.file_name)
+        if save_labeled_image:
+            self.labeled_file_name = f"{image_dir}/image{self.id}_labeled.tif"
+            self.save_image_with_boxes(self.labeled_file_name)
+
+    @staticmethod
+    def from_imagemeta(meta: ImageMeta, image_dir, save_image=True, save_labeled_image=True):
+        return DetectronMeta(
+            meta.text, meta.image, meta.parts, meta.boxes, image_dir, save_image, save_labeled_image, meta.id)
+
+    _letters = []
+
+    def to_dict(self, letter_id_map=None):
+        if letter_id_map is None:
+            import warnings
+            warnings.warn("Consider not using auto ID.")
+            DetectronMeta._letters.extend(p for p in self.parts if p not in DetectronMeta._letters)
+            letter_id_map = {item:i for i, item in enumerate(DetectronMeta._letters)}
+        h, w = self.image.shape
+        annotations = [
+            {'bbox': box, 'bbox_mode': 0, 'category_id': letter_id_map[part]} for box, part in
+            zip(self.boxes, self.parts)
+        ]
+        json_dict = {'file_name': self.file_name, 'height': h, 'width': w, 'image_id': self.id,
+                     'annotations': annotations}
+        return json_dict
