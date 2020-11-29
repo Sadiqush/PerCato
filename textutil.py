@@ -6,8 +6,8 @@ from typing import List, Tuple, Iterable
 import cv2
 from PIL import ImageDraw, ImageFont
 
-from GenerDat.characterutil import *
-from GenerDat.container import *
+from characterutil import *
+from container import *
 
 
 # JOINER = u'\u200d'

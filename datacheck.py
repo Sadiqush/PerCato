@@ -2,7 +2,7 @@ import json
 import pprint
 import re
 
-from GenerDat.textutil import json_path
+from textutil import json_path
 
 
 def sum_class(json_path):
@@ -49,16 +49,16 @@ def compat_check(newalph):
 def fe_check(checkstr):
     """See all the chars in a list as unicode."""
     for c in checkstr:
-        res = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), c))
+        res = (re.sub('GenerDat', lambda x: r'\u%04X' % ord(x.group()), c))
         print("%s is %s" % (c, res))
 
 
 def map_check(alph, checkdic):
     """See all the chars in a dictionary as unicode."""
     for c in alph:
-        mainc = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), c))
+        mainc = (re.sub('GenerDat', lambda x: r'\u%04X' % ord(x.group()), c))
         ans = checkdic[c]
-        res = (re.sub('.', lambda x: r'\u%04X' % ord(x.group()), ans))
+        res = (re.sub('GenerDat', lambda x: r'\u%04X' % ord(x.group()), ans))
         print(c, ' --> ', mainc, " --> ", res)
     return None
 

@@ -65,11 +65,11 @@ def slice_json(json_dir, input_name):
 
 
 def slice_images(img_dir, json_file, output_name):
-    json_path = os.path.join(img_dir, "..", json_file)
+    json_path = os.path.join(img_dir, "", json_file)
     with open(json_path) as f:
         json_file = json.load(f)
 
-    output_path = os.path.join(img_dir, "..", output_name)
+    output_path = os.path.join(img_dir, "", output_name)
     output = open(output_path, "w")
     for block in json_file:
         file_name = os.path.join(img_dir, block["image_name"])
