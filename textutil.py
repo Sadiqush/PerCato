@@ -278,11 +278,12 @@ else:
     json_path = "final.json"
     font_path = "b_nazanin.ttf"
 
+batch = 20
+length = 3
+is_meaningful = False
+ugly_mode = False
+save_with_detectron_format = True
+
 if __name__ == '__main__':
-    batch = 20
-    length = 3
-    is_meaningful = False
-    ugly_mode = False
-    save_with_detectron_format = True
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
     main()
