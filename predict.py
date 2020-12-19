@@ -2,25 +2,33 @@ import json
 
 
 def sort_word(word):
-    word_sort = []
+    # word_sort = []
     for i in range(len(word)):
         already_sorted = True
         for j in range(len(word) - i - 1):
             x = word[j]['bbox'][0]
             x_next = word[j + 1]['bbox'][0]
             if x > x_next:
-                word_sort[j], word_sort[j + 1] = word[j + 1], word[j]
+                word[j], word[j + 1] = word[j + 1], word[j]
                 already_sorted = False
         if already_sorted:
             break
-    return word_sort[::-1]
+    return word[::-1]
 
 
-def show_word(word):
+def show_word(word) -> list:
+
+    def search_keys_by_val(dict, byVal):
+        items_list = dict.items()
+        for item in items_list:
+            if item[1] == byVal:
+                key = item[0]
+        return key
+
     print_string = []
     for char in word:
         cat_id = char['category_id']
-        harf = LABEL_MAP[cat_id]
+        harf = search_keys_by_val(LABEL_MAP, cat_id)
         print_string.append(harf)
     return print_string
 
@@ -55,7 +63,7 @@ LABEL_MAP = {'ﺎ': 0, 'ﺐ': 1, 'ﺑ': 2, 'ﺖ': 3, 'ﺗ': 4, 'ﺚ': 5,
 
 
 if __name__ == "__main__":
-    output_path = 'Downloads/coco_instances_results.json'
+    output_path = '/home/sadegh/Downloads/coco_instances_results.json'
     output = read_output(output_path)
     words = get_words(output, 1)
     for word in words:
