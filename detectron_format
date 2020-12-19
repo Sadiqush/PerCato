@@ -2,7 +2,7 @@
     height: xx,
     width: xx,
     image_id: x,
-    annotations: [ {bbox: [xx, yy, xx, yy],
+    annotations: [ {bbox: [x1, y1, x2, y2],
                     bbox_mode: x
                     category_id: x
                     segmentation:[ [xx, yy, ..., xx, yy],
