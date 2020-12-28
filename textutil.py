@@ -42,12 +42,18 @@ class TextGen:
         """Generates metadata for ImageMeta class to use"""
         image = self.create_image(text)
         boxes = self.get_boxes(image, text)
+        # print(image.shape)
+        # print(loose_boxes)
         # for i, box in enumerate(boxes):
         #     mask = get_mask(image.transpose(), *box)
         #     cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
         parts = self.get_characters(text, self.reject_unknown)
         # visible_parts = self.get_visible_parts(text)
-        meta = ImageMeta(text, image, parts, boxes)
+        if loosebox:
+            loose_boxes = self.loose_boxes(boxes, image.shape, 10)
+            meta = ImageMeta(text, image, parts, loose_boxes)
+        else:
+            meta = ImageMeta(text, image, parts, boxes)
         return meta
 
     def create_image(self, text):
@@ -200,6 +206,31 @@ class TextGen:
         exceptions = [(match.start(), match.end()) for match in finditer("|".join(self.exceptions), text)]
         return exceptions
 
+    def loose(self, y0, y1, shape, value):
+        h = shape if type(shape) is int else shape[1]
+
+        def clip(num):
+            return int(np.clip(num, 0, h))
+
+        if type(value) is int:
+            y0 -= value
+            y1 += value
+        elif type(value) is float:
+            y0 /= value
+            y1 *= value
+        else:
+            raise TypeError(f'Unknown type {type(value)}')
+        return clip(y0), clip(y1)
+
+    def loose_boxes(self, boxes, shape, value):
+        lboxes = []
+        for box in boxes:
+            lbox = [None] * 4
+            lbox[0], lbox[2] = box[0], box[2]
+            lbox[1], lbox[3] = self.loose(box[1], box[3], shape, value)
+            lboxes.append(lbox)
+        return tuple(lboxes)
+
 
 def get_mask(image: np.ndarray, x0, y0, x1, y1):
     temp_mask = np.zeros(image.shape, '?')
@@ -221,68 +252,73 @@ def main():
         words = np.random.choice(words, batch).tolist()
         print(words)
     else:
-        gen.reject_unknown = not ugly_mode
-        words = gen.char_manager.get_equal_words(length, batch, ugly=ugly_mode)
+        pass
     print("start...")
     flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
-        if save_with_detectron_format:
-            for i in range(batch):
-                word = words[i]
-                # print(word)
-                meta = gen.create_meta_image(word)
-                meta = DetectronMeta.from_imagemeta(meta, image_path)
-                print(f"{meta.id}) {word}")
-                js = json.dumps(meta.to_dict())
-                if i == 0:
-                    js = "[{}".format(js)
-                elif i == batch - 1:
-                    js = ",\n{}]".format(js)
-                else:
-                    if i % flush_period == 0:
-                        file.flush()
-                    js = ",\n{}".format(js)
-                file.write(js)
-        else:
-            for i in range(batch):
-                word = words[i]
-                # print(word)
-                meta = gen.create_meta_image(word)
-                meta.save_image(f"{image_path}/image{meta.id}.png")
-                # TODO: argument no meta
-                meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
-                print(f"{meta.id}) {word}")
-                js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
-                if i == 0:
-                    js = "[{}".format(js)
-                elif i == batch - 1:
-                    js = ",\n{}]".format(js)
-                else:
-                    if i % flush_period == 0:
-                        file.flush()
-                    js = ",\n{}".format(js)
-                file.write(js)
+        for i in range(int(batch/10)):
+            if save_with_detectron_format:
+                gen.reject_unknown = not ugly_mode
+                leng = random.randint(length[0], length[1])
+                words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
+                for word in words:
+                    # print(word)
+                    meta = gen.create_meta_image(word)
+                    meta = DetectronMeta.from_imagemeta(meta, image_path)
+                    print(f"{meta.id}) {word}")
+                    js = json.dumps(meta.to_dict())
+                    if i == 0:
+                        js = "[{}".format(js)
+                    elif i == batch - 1:
+                        js = ",\n{}]".format(js)
+                    else:
+                        if i % flush_period == 0:
+                            file.flush()
+                        js = ",\n{}".format(js)
+                    file.write(js)
+            else:
+                gen.reject_unknown = not ugly_mode
+                leng = random.randint(length[0], length[1])
+                words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
+                for word in words:
+                    # print(word)
+                    meta = gen.create_meta_image(word)
+                    meta.save_image(f"{image_path}/image{meta.id}.png")
+                    # TODO: argument no meta
+                    meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+                    print(f"{meta.id}) {word}")
+                    js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
+                    if i == 0:
+                        js = "[{}".format(js)
+                    elif i == batch - 1:
+                        js = ",\n{}]".format(js)
+                    else:
+                        if i % flush_period == 0:
+                            file.flush()
+                        js = ",\n{}".format(js)
+                    file.write(js)
         return None
 
 
-im_sadiqu = 0
+im_sadiqu = 1
 if im_sadiqu:
     image_path = Path.home() / "Projects/OCR/datasets/data13/images"
     json_path = str((image_path.parent / "final.json").absolute())
     image_path = str(image_path.absolute())
-    ocr_path = Path.home() / 'PycharmProjects/ocrdg/GenerDat/'
+    ocr_path = Path.home() / 'PycharmProjects/ocrdg/'
     font_path = str((ocr_path / "b_nazanin.ttf").absolute())
 else:
     image_path = "images/"
     json_path = "final.json"
     font_path = "b_nazanin.ttf"
 
-batch = 20
-length = 3
+batch = 100
+length = (3, 6)
 is_meaningful = False
-ugly_mode = False
-save_with_detectron_format = True
+ugly_mode = True
+save_with_detectron_format = False
+loosebox = True
 
 if __name__ == '__main__':
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
