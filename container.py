@@ -71,7 +71,8 @@ class ImageMeta:
         """
         h, w = self.image.shape
         # TODO: Use COCO standard format
-        json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts.reverse(),
+        self.parts.reverse()
+        json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
                     "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return json_dic
 
