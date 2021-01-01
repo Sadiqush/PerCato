@@ -14,12 +14,12 @@ class ImageMeta:
     """
     id = 0
 
-    def __init__(self, text, image: np.array, parts, boxes, id=-1):
+    def __init__(self, text, image: np.array, parts, annots, id=-1):
         self.text = text
         self.image = image
         self.parts = parts
         # self.visible_parts = visible_parts
-        self.boxes = boxes
+        self.annots = annots
         self.length = len(parts)
         if id > 0:
             self.id = id
@@ -51,7 +51,7 @@ class ImageMeta:
         image = self.image.transpose()
         image = np.concatenate([image[..., np.newaxis]] * 3, axis=2)
         value = list(ImageColor.getrgb(color))
-        for x0, y0, x1, y1 in self.boxes:
+        for x0, y0, x1, y1 in self.annots:
             image[x0:x1 + 1, y0] = value
             image[x0:x1 + 1, y1] = value
             image[x0, y0:y1 + 1] = value
@@ -72,8 +72,12 @@ class ImageMeta:
         h, w = self.image.shape
         # TODO: Use COCO standard format
         self.parts.reverse()
-        json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
-                    "width": w, "height": h, "boxes": self.boxes, "n": self.length}
+        if using_mask:
+            json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
+                        "width": w, "height": h, "masks": self.annots, "n": self.length}
+        else:
+            json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
+                        "width": w, "height": h, "boxes": self.annots, "n": self.length}
         return json_dic
 
 
