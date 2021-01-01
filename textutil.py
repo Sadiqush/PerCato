@@ -44,9 +44,9 @@ class TextGen:
         boxes = self.get_boxes(image, text)
         # print(image.shape)
         # print(loose_boxes)
-        # for i, box in enumerate(boxes):
-        #     mask = get_mask(image.transpose(), *box)
-        #     cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
+        for i, box in enumerate(boxes):
+            mask = get_mask(image.transpose(), *box)
+            cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
         parts = self.get_characters(text, self.reject_unknown)
         # visible_parts = self.get_visible_parts(text)
         if loosebox:
@@ -286,15 +286,15 @@ def main():
                     meta = gen.create_meta_image(word)
                     meta.save_image(f"{image_path}/image{meta.id}.png")
                     # TODO: argument no meta
-                    meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+                    # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
                     print(f"{meta.id}) {word}")
                     js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
-                    if i == 0:
+                    if meta.id == 0:
                         js = "[{}".format(js)
-                    elif i == batch - 1:
+                    elif meta.id == batch - 1:
                         js = ",\n{}]".format(js)
                     else:
-                        if i % flush_period == 0:
+                        if meta.id % flush_period == 0:
                             file.flush()
                         js = ",\n{}".format(js)
                     file.write(js)
@@ -303,7 +303,7 @@ def main():
 
 im_sadiqu = 1
 if im_sadiqu:
-    image_path = Path.home() / "Projects/OCR/datasets/data13/images"
+    image_path = Path.home() / "Projects/OCR/datasets/data15/images"
     json_path = str((image_path.parent / "final.json").absolute())
     image_path = str(image_path.absolute())
     ocr_path = Path.home() / 'PycharmProjects/ocrdg/'
@@ -313,12 +313,12 @@ else:
     json_path = "final.json"
     font_path = "b_nazanin.ttf"
 
-batch = 100
+batch = 20
 length = (3, 6)
 is_meaningful = False
 ugly_mode = True
 save_with_detectron_format = False
-loosebox = True
+loosebox = False
 
 if __name__ == '__main__':
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
