@@ -1,6 +1,9 @@
 import numpy as np
 from PIL import ImageColor, Image
 
+from textutil import using_mask
+
+
 class ImageMeta:
     """
     This class is used to export images along with generated metadata, aka making the json file.
