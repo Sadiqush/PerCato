@@ -2,6 +2,7 @@ from functools import reduce
 from pathlib import Path
 from re import finditer
 from typing import List, Tuple, Iterable
+from itertools import groupby
 
 import cv2
 from PIL import ImageDraw, ImageFont
@@ -42,18 +43,23 @@ class TextGen:
         """Generates metadata for ImageMeta class to use"""
         image = self.create_image(text)
         boxes = self.get_boxes(image, text)
-        # print(image.shape)
-        # print(loose_boxes)
-        for i, box in enumerate(boxes):
-            mask = get_mask(image.transpose(), *box)
-            cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
         parts = self.get_characters(text, self.reject_unknown)
         # visible_parts = self.get_visible_parts(text)
-        if loosebox:
-            loose_boxes = self.loose_boxes(boxes, image.shape, 10)
-            meta = ImageMeta(text, image, parts, loose_boxes)
+        if using_mask:
+            masks = []
+            for i, box in enumerate(boxes):
+                bin_mask = get_mask(image.transpose(), *box)
+                rle_mask = binary_mask_to_rle(bin_mask)
+                masks.append(rle_mask)
+                # cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
+            # print(masks)
+            meta = ImageMeta(text, image, parts, masks)
         else:
-            meta = ImageMeta(text, image, parts, boxes)
+            if loosebox:
+                loose_boxes = self.loose_boxes(boxes, image.shape, 10)
+                meta = ImageMeta(text, image, parts, loose_boxes)
+            else:
+                meta = ImageMeta(text, image, parts, boxes)
         return meta
 
     def create_image(self, text):
@@ -232,6 +238,16 @@ class TextGen:
         return tuple(lboxes)
 
 
+def binary_mask_to_rle(binary_mask):
+    rle = {'counts': [], 'size': list(binary_mask.shape)}
+    counts = rle.get('counts')
+    for i, (value, elements) in enumerate(groupby(binary_mask.ravel(order='F'))):
+        if i == 0 and value == 1:
+            counts.append(0)
+        counts.append(len(list(elements)))
+    return rle
+
+
 def get_mask(image: np.ndarray, x0, y0, x1, y1):
     temp_mask = np.zeros(image.shape, '?')
     temp_mask[x0:x1 + 1, y0:y1 + 1] = 1
@@ -317,9 +333,11 @@ batch = 20
 length = (3, 6)
 is_meaningful = False
 ugly_mode = True
+using_mask = True
 save_with_detectron_format = False
 loosebox = False
 
 if __name__ == '__main__':
-    assert not (is_meaningful and ugly_mode), "You can't have ugly and meaninful at the same time retard."
+    assert not (is_meaningful and ugly_mode), "You can't have ugly and meaningful at the same time retard."
+    assert not (using_mask and loosebox), "You can't have masks and boxes at the same time retard."
     main()
