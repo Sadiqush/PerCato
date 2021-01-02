@@ -8,6 +8,11 @@
                     segmentation:[ [xx, yy, ..., xx, yy],
                                    [xx, yy, ..., xx, yy],
                                    ...] ]
+                    /
+                    segmentation:{
+                                  counts: [xx, xx, ..., xx],
+                                  size: [xx, xx]
+                                 }
                     keypoints: [xx, yy, vv, ..., xx, yy, vv]
                     iscrowd: 0/1 },
 
