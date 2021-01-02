@@ -17,12 +17,12 @@ class ImageMeta:
     """
     id = 0
 
-    def __init__(self, text, image: np.array, parts, annots, id=-1):
+    def __init__(self, text, image: np.array, parts, boxes, masks, id=-1):
         self.text = text
         self.image = image
         self.parts = parts
-        # self.visible_parts = visible_parts
-        self.annots = annots
+        self.boxes = boxes
+        self.masks = masks
         self.length = len(parts)
         if id > 0:
             self.id = id
@@ -54,7 +54,7 @@ class ImageMeta:
         image = self.image.transpose()
         image = np.concatenate([image[..., np.newaxis]] * 3, axis=2)
         value = list(ImageColor.getrgb(color))
-        for x0, y0, x1, y1 in self.annots:
+        for x0, y0, x1, y1 in self.masks:
             image[x0:x1 + 1, y0] = value
             image[x0:x1 + 1, y1] = value
             image[x0, y0:y1 + 1] = value
@@ -77,10 +77,10 @@ class ImageMeta:
         self.parts.reverse()
         if using_mask:
             json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
-                        "width": w, "height": h, "masks": self.annots, "n": self.length}
+                        "width": w, "height": h, "boxes": self.boxes, "masks": self.masks, "n": self.length}
         else:
             json_dic = {"id": self.id, "text": self.text, "image_name": path, "parts": self.parts,
-                        "width": w, "height": h, "boxes": self.annots, "n": self.length}
+                        "width": w, "height": h, "boxes": self.boxes, "n": self.length}
         return json_dic
 
 
@@ -107,7 +107,7 @@ class DetectronMeta(ImageMeta):
             import warnings
             warnings.warn("Consider not using auto ID.")
             DetectronMeta._letters.extend(p for p in self.parts if p not in DetectronMeta._letters)
-            letter_id_map = {item:i for i, item in enumerate(DetectronMeta._letters)}
+            letter_id_map = {item: i for i, item in enumerate(DetectronMeta._letters)}
         h, w = self.image.shape
         annotations = [
             {'bbox': box, 'bbox_mode': 0, 'category_id': letter_id_map[part]} for box, part in

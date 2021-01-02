@@ -53,7 +53,7 @@ class TextGen:
                 masks.append(rle_mask)
                 # cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
             # print(masks)
-            meta = ImageMeta(text, image, parts, masks)
+            meta = ImageMeta(text, image, parts, boxes, masks)
         else:
             if loosebox:
                 loose_boxes = self.loose_boxes(boxes, image.shape, 10)
@@ -319,8 +319,8 @@ def main():
 
 im_sadiqu = 1
 if im_sadiqu:
-    image_path = Path.home() / "Projects/OCR/datasets/data15/images"
-    json_path = str((image_path.parent / "final.json").absolute())
+    image_path = Path.home() / "Projects/OCR/datasets/data16/val_images"
+    json_path = str((image_path.parent / "val_ocr.json").absolute())
     image_path = str(image_path.absolute())
     ocr_path = Path.home() / 'PycharmProjects/ocrdg/'
     font_path = str((ocr_path / "b_nazanin.ttf").absolute())
@@ -329,7 +329,7 @@ else:
     json_path = "final.json"
     font_path = "b_nazanin.ttf"
 
-batch = 20
+batch = 10
 length = (3, 6)
 is_meaningful = False
 ugly_mode = True
