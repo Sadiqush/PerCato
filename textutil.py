@@ -49,10 +49,11 @@ class TextGen:
             masks = []
             for i, box in enumerate(boxes):
                 bin_mask = get_mask(image.transpose(), *box)
-                rle_mask = binary_mask_to_rle(bin_mask)
-                masks.append(rle_mask)
-                # cv2.imwrite(image_path + f'{text}ez_{i}.png', mask.transpose() * 255)
-            # print(masks)
+                # cv2.imwrite(image_path + f'{text}ez_{i}.png', bin_mask.transpose() * 255)
+                bin_mask = bin_mask.tolist()
+                # print(bin_mask)
+                # rle_mask = binary_mask_to_rle(bin_mask)
+                masks.append(bin_mask)
             meta = ImageMeta(text, image, parts, boxes, masks)
         else:
             if loosebox:
@@ -252,7 +253,7 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
     temp_mask = np.zeros(image.shape, '?')
     temp_mask[x0:x1 + 1, y0:y1 + 1] = 1
     mask: np.ndarray = (image > 0) & temp_mask
-    return mask.astype('b')
+    return mask.astype('uint8')
 
 
 def main():
@@ -266,61 +267,60 @@ def main():
         alphabet = gen.char_manager.get_persian_letters()
         words = [word for word in words if all(c in alphabet for c in word)]
         words = np.random.choice(words, batch).tolist()
-        print(words)
+        # print(words)
     else:
-        pass
+        leng = random.randint(length[0], length[1])
+        words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
     print("start...")
     flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
         for i in range(int(batch/10)):
-            if save_with_detectron_format:
-                gen.reject_unknown = not ugly_mode
-                leng = random.randint(length[0], length[1])
-                words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
-                for word in words:
-                    # print(word)
-                    meta = gen.create_meta_image(word)
-                    meta = DetectronMeta.from_imagemeta(meta, image_path)
-                    print(f"{meta.id}) {word}")
-                    js = json.dumps(meta.to_dict())
-                    if i == 0:
-                        js = "[{}".format(js)
-                    elif i == batch - 1:
-                        js = ",\n{}]".format(js)
-                    else:
-                        if i % flush_period == 0:
-                            file.flush()
-                        js = ",\n{}".format(js)
-                    file.write(js)
-            else:
-                gen.reject_unknown = not ugly_mode
-                leng = random.randint(length[0], length[1])
-                words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
-                for word in words:
-                    # print(word)
-                    meta = gen.create_meta_image(word)
-                    meta.save_image(f"{image_path}/image{meta.id}.png")
-                    # TODO: argument no meta
-                    # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
-                    print(f"{meta.id}) {word}")
-                    js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
-                    if meta.id == 0:
-                        js = "[{}".format(js)
-                    elif meta.id == batch - 1:
-                        js = ",\n{}]".format(js)
-                    else:
-                        if meta.id % flush_period == 0:
-                            file.flush()
-                        js = ",\n{}".format(js)
-                    file.write(js)
+            # if save_with_detectron_format:
+            #     gen.reject_unknown = not ugly_mode
+            #     leng = random.randint(length[0], length[1])
+            #     words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
+            #     for word in words:
+            #         # print(word)
+            #         meta = gen.create_meta_image(word)
+            #         meta = DetectronMeta.from_imagemeta(meta, image_path)
+            #         print(f"{meta.id}) {word}")
+            #         js = json.dumps(meta.to_dict())
+            #         if i == 0:
+            #             js = "[{}".format(js)
+            #         elif i == batch - 1:
+            #             js = ",\n{}]".format(js)
+            #         else:
+            #             if i % flush_period == 0:
+            #                 file.flush()
+            #             js = ",\n{}".format(js)
+            #         file.write(js)
+            # else:
+            gen.reject_unknown = not ugly_mode
+            for word in words:
+                # print(word)
+                meta = gen.create_meta_image(word)
+                meta.save_image(f"{image_path}/image{meta.id}.png")
+                # TODO: argument no meta
+                # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+                print(f"{meta.id}) {word}")
+                js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
+                if meta.id == 0:
+                    js = "[{}".format(js)
+                elif meta.id == batch - 1:
+                    js = ",\n{}]".format(js)
+                else:
+                    if meta.id % flush_period == 0:
+                        file.flush()
+                    js = ",\n{}".format(js)
+                file.write(js)
         return None
 
 
 im_sadiqu = 1
 if im_sadiqu:
-    image_path = Path.home() / "Projects/OCR/datasets/data16/val_images"
-    json_path = str((image_path.parent / "val_ocr.json").absolute())
+    image_path = Path.home() / "Projects/OCR/datasets/data16-test/train_images"
+    json_path = str((image_path.parent / "train_ocr.json").absolute())
     image_path = str(image_path.absolute())
     ocr_path = Path.home() / 'PycharmProjects/ocrdg/'
     font_path = str((ocr_path / "b_nazanin.ttf").absolute())
@@ -329,11 +329,11 @@ else:
     json_path = "final.json"
     font_path = "b_nazanin.ttf"
 
-batch = 10
+batch = 100
 length = (3, 6)
-is_meaningful = False
-ugly_mode = True
-using_mask = True
+is_meaningful = True
+ugly_mode = False
+using_mask = False
 save_with_detectron_format = False
 loosebox = False
 

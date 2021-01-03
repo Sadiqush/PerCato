@@ -17,7 +17,7 @@ class ImageMeta:
     """
     id = 0
 
-    def __init__(self, text, image: np.array, parts, boxes, masks, id=-1):
+    def __init__(self, text, image: np.array, parts, boxes, masks=[], id=-1):
         self.text = text
         self.image = image
         self.parts = parts
