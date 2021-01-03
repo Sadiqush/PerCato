@@ -257,7 +257,6 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
 
 
 def generate_word(gen, file, word):
-    print(word)
     meta = gen.create_meta_image(word)
     meta.save_image(f"{image_path}/image{meta.id}.png")
     # TODO: argument no meta
