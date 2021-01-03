@@ -8,7 +8,7 @@ from PIL import ImageDraw, ImageFont
 
 from characterutil import *
 from container import *
-from main import loosebox
+from params import using_mask, loosebox
 
 
 # JOINER = u'\u200d'

@@ -5,9 +5,6 @@ import random
 from copy import copy, deepcopy
 
 
-# from timeit import timeit
-
-
 class Character:
     def __init__(self, character, description=None, unicode=-1):
         self.unicode = unicode

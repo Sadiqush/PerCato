@@ -1,14 +1,13 @@
 import json
 import random
-from pathlib import Path
 
 import numpy as np
 
 from textutils import TextGen
+from params import *
 
 
 def generate_word(gen, file, word):
-    print(word)
     meta = gen.create_meta_image(word)
     meta.save_image(f"{image_path}/image{meta.id}.png")
     # TODO: argument no meta
@@ -46,39 +45,22 @@ def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     Path(image_path).mkdir(parents=True, exist_ok=True)
     gen.reject_unknown = True
-    if is_meaningful:
-        words = get_mean_words(gen)
-    else:
-        words = get_words(gen)
-    print("start...")
+    print("starting...")
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
-        for i in range(int(batch/10)):
+        if is_meaningful:
+            words = get_mean_words(gen)
+            for i in range(batch):
+                for word in words:
+                    generate_word(gen, file, word)
+        else:
             gen.reject_unknown = not ugly_mode
-            for word in words:
-                generate_word(gen, file, word)
-        return None
+            for i in range(int(batch / 10)):
+                words = get_words(gen)
+                for word in words:
+                    generate_word(gen, file, word)
+    return None
 
-
-im_sadiqu = 1
-if im_sadiqu:
-    image_path = Path.home() / "Projects/OCR/datasets/data16-test/train_images"
-    json_path = str((image_path.parent / "train_ocr.json").absolute())
-    image_path = str(image_path.absolute())
-    ocr_path = Path.home() / 'PycharmProjects/ocrdg/'
-    font_path = str((ocr_path / "b_nazanin.ttf").absolute())
-else:
-    image_path = "images/"
-    json_path = "final.json"
-    font_path = "b_nazanin.ttf"
-
-batch = 10
-length = (3, 6)
-is_meaningful = True
-ugly_mode = False
-using_mask = False
-save_with_detectron_format = False
-loosebox = False
 
 if __name__ == '__main__':
     assert not (is_meaningful and ugly_mode), "You can't have ugly and meaningful at the same time retard."
