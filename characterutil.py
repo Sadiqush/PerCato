@@ -65,6 +65,15 @@ class PersianLetter(Character):
 
 
 class CharacterManager:
+    sadiq_letters = ['ﺎ', 'ﺐ', 'ﺑ', 'ﺖ', 'ﺗ', 'ﺚ', 'ﺛ', 'ﺞ', 'ﺟ',
+                     'ﺢ', 'ﺣ', 'ﺦ', 'ﺧ', 'ﺪ', 'ﺬ', 'ﺮ', 'ﺰ', 'ﺲ',
+                     'ﺳ', 'ﺶ', 'ﺷ', 'ﺺ', 'ﺻ', 'ﺾ', 'ﺿ', 'ﻂ',
+                     'ﻆ', 'ﻉ', 'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ',
+                     'ﻒ', 'ﻓ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﻚ', 'ﻛ', 'ﻞ',
+                     'ﻟ', 'ﻠ', 'ﻢ', 'ﻣ', 'ﻡ', 'ﻦ', 'ﻧ', 'ﻩ', 'ﻪ', 'ﻫ',
+                     'ﻬ', 'ﻮ', 'ﯼ', 'ﯾ', 'ﭗ', 'ﭘ', 'ﭻ', 'ﭼ', 'ﮋ',
+                     'ﮓ', 'ﮔ', 'ﺋ', 'ﺁ', 'لا']
+
     def __init__(self, json_path: str = "letters.json"):
         self._letter_map: Dict[str, PersianLetter] = self.load_persian_letters(json_path)
         self._letter_forms = None
@@ -147,15 +156,7 @@ class CharacterManager:
     def get_equal_words(self, length: int, batch: int, occurrence=1, seed=None, ugly=False):
         """Generate random words with equal weight (probability) for letters"""
         choices = random.Random(seed).choices if seed else random.choices
-        sadiq_letters = ['ﺎ', 'ﺐ', 'ﺑ', 'ﺖ', 'ﺗ', 'ﺚ', 'ﺛ', 'ﺞ', 'ﺟ',
-                         'ﺢ', 'ﺣ', 'ﺦ', 'ﺧ', 'ﺪ', 'ﺬ', 'ﺮ', 'ﺰ', 'ﺲ',
-                         'ﺳ', 'ﺶ', 'ﺷ', 'ﺺ', 'ﺻ', 'ﺾ', 'ﺿ', 'ﻂ',
-                         'ﻆ', 'ﻉ', 'ﻊ', 'ﻋ', 'ﻌ', 'ﻍ', 'ﻎ', 'ﻏ', 'ﻐ',
-                         'ﻒ', 'ﻓ', 'ﻖ', 'ﻗ', 'ﻘ', 'ﻚ', 'ﻛ', 'ﻞ',
-                         'ﻟ', 'ﻠ', 'ﻢ', 'ﻣ', 'ﻦ', 'ﻧ', 'ﻩ', 'ﻪ', 'ﻫ',
-                         'ﻬ', 'ﻮ', 'ﯼ', 'ﯾ', 'ﭗ', 'ﭘ', 'ﭻ', 'ﭼ', 'ﮋ',
-                         'ﮓ', 'ﮔ', 'ﺋ', 'ﺁ', 'لا']
-        letters = sadiq_letters if ugly else self.get_persian_letters()
+        letters = CharacterManager.sadiq_letters if ugly else self.get_persian_letters()
         if 1 < occurrence <= length:
             letters *= occurrence
         words = list({''.join(choices(letters, k=length)) for _ in range(batch)})

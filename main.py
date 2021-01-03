@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 
+import characterutil
 from textutils import TextGen
 from params import *
 
@@ -41,6 +42,25 @@ def get_words(gen):
     return words
 
 
+def write_letters(json_form=False):
+    """
+    writes the used letters for dataset as a file
+    along with other files in output directory
+    """
+    charman = characterutil.CharacterManager
+    letters = charman.sadiq_letters
+    if json_form:
+        # Using JSON format writes letters as unicode
+        with open(letters_path + '.json', 'w') as f:
+            jletters = json.dumps(letters, indent=4)
+            f.write(jletters)
+    else:
+        with open(letters_path + '.txt', 'w') as f:
+            f.write(str(letters))
+
+    return None
+
+
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     Path(image_path).mkdir(parents=True, exist_ok=True)
@@ -59,6 +79,7 @@ def main():
                 words = get_words(gen)
                 for word in words:
                     generate_word(gen, file, word)
+    write_letters(json_form=False)
     return None
 
 
