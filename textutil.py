@@ -256,64 +256,56 @@ def get_mask(image: np.ndarray, x0, y0, x1, y1):
     return mask.astype('uint8')
 
 
+def generate_word(gen, file, word):
+    print(word)
+    meta = gen.create_meta_image(word)
+    meta.save_image(f"{image_path}/image{meta.id}.png")
+    # TODO: argument no meta
+    # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
+    print(f"{meta.id}) {word}")
+    js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
+    if meta.id == 0:
+        js = "[{}".format(js)
+    elif meta.id == batch - 1:
+        js = ",\n{}]".format(js)
+    else:
+        if meta.id % 100 == 0:
+            file.flush()
+        js = ",\n{}".format(js)
+    file.write(js)
+
+
+def get_mean_words(gen):
+    with open('words.csv', 'r', encoding='utf-8') as file:
+        text = file.read()
+        words = list(text.split('\n'))
+    alphabet = gen.char_manager.get_persian_letters()
+    words = [word for word in words if all(c in alphabet for c in word)]
+    words = np.random.choice(words, batch).tolist()
+    return words
+
+
+def get_words(gen):
+    leng = random.randint(length[0], length[1])
+    words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
+    return words
+
+
 def main():
     gen = TextGen(font_path, 64, ['لا', 'لله', 'ریال'])
     Path(image_path).mkdir(parents=True, exist_ok=True)
     gen.reject_unknown = True
     if is_meaningful:
-        with open('words.csv', 'r', encoding='utf-8') as file:
-            text = file.read()
-            words = list(text.split('\n'))
-        alphabet = gen.char_manager.get_persian_letters()
-        words = [word for word in words if all(c in alphabet for c in word)]
-        words = np.random.choice(words, batch).tolist()
-        # print(words)
+        words = get_mean_words(gen)
     else:
-        leng = random.randint(length[0], length[1])
-        words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
+        words = get_words(gen)
     print("start...")
-    flush_period = 100
     with open(json_path, 'w') as file:
         print(f"generating in: {image_path}")
         for i in range(int(batch/10)):
-            # if save_with_detectron_format:
-            #     gen.reject_unknown = not ugly_mode
-            #     leng = random.randint(length[0], length[1])
-            #     words = gen.char_manager.get_equal_words(leng, 10, ugly=ugly_mode)
-            #     for word in words:
-            #         # print(word)
-            #         meta = gen.create_meta_image(word)
-            #         meta = DetectronMeta.from_imagemeta(meta, image_path)
-            #         print(f"{meta.id}) {word}")
-            #         js = json.dumps(meta.to_dict())
-            #         if i == 0:
-            #             js = "[{}".format(js)
-            #         elif i == batch - 1:
-            #             js = ",\n{}]".format(js)
-            #         else:
-            #             if i % flush_period == 0:
-            #                 file.flush()
-            #             js = ",\n{}".format(js)
-            #         file.write(js)
-            # else:
             gen.reject_unknown = not ugly_mode
             for word in words:
-                # print(word)
-                meta = gen.create_meta_image(word)
-                meta.save_image(f"{image_path}/image{meta.id}.png")
-                # TODO: argument no meta
-                # meta.save_image_with_boxes(f"{image_path}/image_box{meta.id}.jpg")
-                print(f"{meta.id}) {word}")
-                js = json.dumps(meta.to_dict(f"image{meta.id}.png"))
-                if meta.id == 0:
-                    js = "[{}".format(js)
-                elif meta.id == batch - 1:
-                    js = ",\n{}]".format(js)
-                else:
-                    if meta.id % flush_period == 0:
-                        file.flush()
-                    js = ",\n{}".format(js)
-                file.write(js)
+                generate_word(gen, file, word)
         return None
 
 
@@ -329,7 +321,7 @@ else:
     json_path = "final.json"
     font_path = "b_nazanin.ttf"
 
-batch = 100
+batch = 10
 length = (3, 6)
 is_meaningful = True
 ugly_mode = False
