@@ -50,9 +50,9 @@ def main():
         print(f"generating in: {image_path}")
         if is_meaningful:
             words = get_mean_words(gen)
+            print(len(words))
             for i in range(batch):
-                for word in words:
-                    generate_word(gen, file, word)
+                generate_word(gen, file, words[i])
         else:
             gen.reject_unknown = not ugly_mode
             for i in range(int(batch / 10)):
