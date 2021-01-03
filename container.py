@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import ImageColor, Image
 
-from textutil import using_mask
+from main import using_mask
 
 
 class ImageMeta:

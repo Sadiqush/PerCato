@@ -2,7 +2,7 @@ import json
 import pprint
 import re
 
-from textutil import json_path
+from main import json_path
 
 
 def sum_class(json_path):
