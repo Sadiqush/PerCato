@@ -3,7 +3,8 @@ from pathlib import Path
 
 import main
 
-if __name__ == '__main__':
+
+def run():
     ap = argparse.ArgumentParser(description='...')
     ap.add_argument('batch', type=int, nargs='+', help='Batch count')
     ap.add_argument('length', type=int, nargs='?', help='Length of words (default = 3)', default=3)
@@ -36,3 +37,7 @@ if __name__ == '__main__':
     main.json_path = f"{path}{'/'}final.json"
     print(f'Saving {args.batch} images in "{path}"')
     main.main()
+
+
+if __name__ == '__main__':
+    run()
