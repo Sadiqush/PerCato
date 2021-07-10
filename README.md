@@ -1,4 +1,4 @@
-# reverse video search
+# Persian OCR 
 
 PerCato (Short for Persian Character OCR) is a python library for detecting Persian/Farsi letters in an image or pdf file.
  PerCato is both a image-from-text generation program for other OCR projects and also a deep learning model made using Detectron2.
